@@ -1,0 +1,489 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Model 1 — Three-Well Theis Aquifer Simulator</title><style>
+:root{font-family:Aptos, sans-serif;color:#e5edf7;background:#091320}*{box-sizing:border-box}body{margin:0}header{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#111f31;border-bottom:1px solid #314258}h1{font-size:19px;margin:0}small,.muted{color:#9fb1c8}.badge{border:1px solid #456384;border-radius:20px;padding:6px 12px;color:#b8d6f3;font-size:12px}.layout{display:grid;grid-template-columns:minmax(560px,1fr) 350px;gap:12px;padding:12px;height:calc(100vh - 64px);min-height:600px}.main,.panel{background:#111f31;border:1px solid #314258;border-radius:12px;min-width:0}.main{display:flex;flex-direction:column;overflow:hidden}.visuals{flex:1;min-height:0;display:grid;grid-template-rows:minmax(270px,1.65fr) minmax(175px,1fr);gap:7px;padding:0 9px 7px}.scene-wrap{position:relative;min-height:0}.scene-wrap #scene{height:100%;min-height:0}.rates-overlay{position:absolute;right:12px;top:12px;pointer-events:none;background:rgba(7,18,33,.86);border:1px solid #53708c;border-radius:8px;padding:9px 12px;font-size:12px;line-height:1.65;box-shadow:0 4px 14px #0006}.rates-overlay strong{display:block;color:#f2f7ff;margin-bottom:3px}.rates-overlay .rate{white-space:nowrap}.subviews{display:grid;grid-template-columns:1fr 1fr;gap:8px;min-height:0}.subview{display:flex;flex-direction:column;min-height:0;background:#0d1a2b;border:1px solid #314258;border-radius:8px;overflow:hidden}.subview-title{font-size:12px;font-weight:650;padding:6px 9px;background:#192c42;display:flex;justify-content:space-between}.subview canvas{width:100%;height:100%;min-height:0;display:block}.subview .plot{flex:1;min-height:0}.viewbar{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;gap:8px;flex-wrap:wrap}.viewbar strong{font-size:14px}.viewbar small{font-size:12px}#scene{width:100%;flex:1;min-height:0;touch-action:none;cursor:grab}#scene:active{cursor:grabbing}.bottom{padding:10px 15px 14px;border-top:1px solid #314258}.timehead{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.timehead strong{font-size:16px}input[type=range]{width:100%;accent-color:#57b4fa;cursor:pointer}button{background:#213a55;color:#edf6ff;border:1px solid #426282;border-radius:7px;padding:8px 11px;cursor:pointer;font-weight:600}button:hover{background:#30577c}button.primary{background:#1767b1;border-color:#3199e7}button.selected{background:#267bbd;border-color:#79cbff}.buttons{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}.stat{background:#192c42;border:1px solid #2b4765;border-radius:8px;padding:9px}.stat label{display:block;color:#a8bed6;font-size:11px;margin-bottom:5px}.stat b{font-size:16px}.sidebar{overflow:auto;padding:12px}.section{border:1px solid #30465f;border-radius:9px;padding:12px;margin-bottom:11px;background:#15273c}.section h2{font-size:14px;margin:0 0 10px}.control{margin:11px 0}.control .top{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-bottom:5px}.control output{font-weight:700;color:#92d2ff}.pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}.well-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.well-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px}.note{font-size:11px;color:#aabbd0;line-height:1.45}.legend{display:flex;align-items:center;gap:10px;padding:0 15px 8px;font-size:11px;color:#c2d4e9}.ramp{width:160px;height:10px;border-radius:5px;background:linear-gradient(90deg,#1659aa,#1bc8d7,#64d77a,#f6e35c,#f28439,#a52943)}.footer{font-size:11px;color:#94a9bf;padding:4px 15px 9px}@media(max-width:1050px){.layout{height:auto;grid-template-columns:1fr}.main{height:90vh;min-height:650px}.sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.section{margin:0}}@media(max-width:650px){.layout{grid-template-columns:1fr;padding:6px}.main{height:85vh;min-height:650px}.visuals{grid-template-rows:minmax(230px,1.4fr) minmax(220px,1fr)}.sidebar{display:block}.section{margin-bottom:10px}.stats{grid-template-columns:repeat(2,1fr)}.pair{grid-template-columns:1fr}header{padding:10px}}
+
+/* Linked orthogonal sections: map top-left, Y-profile right, X-profile below, 3D lower-right. */
+.linked-views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:0 9px 7px;flex:1;min-height:0}
+.linked-views .subview{min-width:0;min-height:0}
+.linked-views .subview .plot{position:relative;min-height:0;flex:1;overflow:hidden}
+.linked-views canvas{display:block;width:100%;height:100%;min-height:0}
+.linked-views .plan-panel canvas{cursor:crosshair;touch-action:none}
+.linked-views .scene-wrap{position:relative;min-height:0}
+.linked-views .scene-wrap #scene{height:100%;width:100%;touch-action:none;cursor:grab}
+.linked-views .rates-overlay{font-size:11px;top:7px;right:7px;padding:6px 8px}
+@media(max-width:1050px){.linked-views{grid-template-rows:minmax(0,1fr) minmax(0,1fr)}}
+@media(max-width:650px){.linked-views{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) minmax(0,1fr)}.linked-views .subview-title{font-size:10px}.linked-views .rates-overlay{font-size:9px}}
+
+.export-section{border-top:1px solid #3b5671;padding:12px;background:#12253a}.export-section h2{margin:0 0 7px;font-size:15px}.export-section .note{font-size:11px;line-height:1.4}.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:8px 0}.export-grid label{font-size:11px;display:flex;align-items:center;gap:5px}.export-grid input{accent-color:#43b5f5}.export-row{display:flex;gap:7px;margin:7px 0}.export-row label{flex:1;font-size:11px}.export-row select{width:100%;margin-top:4px;padding:6px;border-radius:5px;background:#0b1929;border:1px solid #3a5974;color:#fff}.export-actions{display:flex;gap:7px;flex-wrap:wrap}.export-actions button{font-size:12px;padding:8px 10px}.export-status{font-size:11px;color:#b5d8f1;min-height:29px;margin-top:7px;line-height:1.4}.export-section progress{width:100%;height:9px;accent-color:#3ea8e5}.export-section button:disabled{opacity:.45;cursor:wait}
+
+/* v10: compact controls, maximize plot area and align X coordinates exactly. */
+header{padding:6px 12px}header h1{font-size:16px}header small{display:none}
+.layout{grid-template-columns:minmax(620px,1fr) 272px;gap:7px;padding:7px;height:calc(100vh - 43px);min-height:650px}
+.viewbar{padding:5px 10px}.viewbar strong{font-size:12px}.viewbar small{font-size:10px}
+.linked-views{gap:5px;padding:0 5px 4px;grid-template-rows:minmax(0,1fr) minmax(0,.80fr)}
+.subview-title{padding:3px 7px;font-size:11px;min-height:23px}
+.legend{padding:2px 10px 3px}.bottom{padding:5px 10px 7px}.timehead{margin-bottom:3px}.buttons{margin-top:4px;gap:4px}.buttons button{padding:5px 7px;font-size:11px}
+.stats{margin-top:5px;gap:4px}.stat{padding:5px}.stat label{margin-bottom:2px;font-size:10px}.stat b{font-size:13px}
+.footer{display:none}.sidebar{padding:6px}.section{padding:7px;margin-bottom:6px}.section h2{font-size:12px;margin-bottom:4px}.control{margin:6px 0}.control .top{font-size:11px;margin-bottom:2px}.pair{gap:5px}
+/* Scientific explanations are available on hover or keyboard focus, not persistently visible. */
+.note,.export-section .note{display:none}
+[data-help]{cursor:help}
+/* Single fixed-position tooltip portal: never clipped by scrolling panels or viewport edges. */
+#helpTooltip{position:fixed;z-index:2147483647;box-sizing:border-box;max-width:min(320px,calc(100vw - 20px));background:#eef6ff;color:#102338;border:1px solid #8ab4d5;border-radius:7px;padding:9px 12px;font-size:12px;font-weight:400;line-height:1.5;box-shadow:0 6px 24px #0009;pointer-events:none;visibility:hidden;opacity:0;transition:opacity .1s;white-space:normal;overflow-wrap:break-word}
+#helpTooltip.visible{visibility:visible;opacity:1}
+
+@media(max-width:1050px){.layout{grid-template-columns:1fr;height:auto}.main{height:90vh;min-height:650px}.sidebar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}}
+
+/* Creator attribution: fixed in the viewport and never hidden by scrollable panels. */
+.creator-credit{position:fixed;right:12px;bottom:7px;z-index:5000;font:500 11px/1.5 Aptos, sans-serif;color:#c2d7ec;background:rgba(9,19,32,.94);border:1px solid #45617c;border-radius:6px;padding:3px 8px;text-decoration:none;white-space:nowrap;max-width:calc(100vw - 24px)}
+.creator-credit:hover,.creator-credit:focus-visible{color:#fff;text-decoration:underline;border-color:#73bdf0;outline-offset:2px}
+
+/* v17: physical 0.2 m radial cutoff in the analytical Theis evaluation, including at pumping wells. */
+.y-layout{display:flex;flex-direction:row;min-width:0;align-items:stretch;gap:5px;padding:2px 5px 3px 0}
+.y-layout .y-graph{flex:0 0 50%;width:50%;min-width:120px;max-width:65%;height:100%;min-height:0}
+.y-layout .y-graph canvas{height:100%;width:100%;display:block}
+.well-summary{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;background:#14283d;border:1px solid #385471;border-radius:6px;overflow:hidden}
+.summary-heading{font-weight:700;font-size:12px;padding:8px 8px 5px;color:#d9edfc}
+.summary-scroll{flex:1;min-height:0;overflow:auto;scrollbar-width:thin}
+.well-table{width:100%;border-collapse:collapse;font-size:10px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.well-table th{position:sticky;top:0;background:#1c3650;text-align:right;color:#b7d9ee;font-size:9px;padding:5px 3px;z-index:1}
+.well-table th:first-child,.well-table td:first-child{text-align:left}
+.well-table td{padding:7px 3px;border-top:1px solid #2b435b;text-align:right;color:#e7f3ff}
+.well-table tr:nth-child(even){background:#192e43}
+.well-table .well-label{font-weight:700}.well-table .monitor-row{background:#193e52;color:#d2f4ff}.well-table .monitor-row .well-label{color:#6de2fa}
+.summary-note{font-size:9px;color:#9db5ca;padding:5px 7px;border-top:1px solid #385471;line-height:1.25}
+@media(max-width:1100px){.summary-heading{font-size:10px}.well-table{font-size:10px}.well-table th{font-size:9px}.summary-note{font-size:8px}}
+
+/* v21 fixed desktop layout and consolidated numerical status */
+@media(min-width:850px){.layout{grid-template-columns:minmax(620px,1fr) 272px;height:calc(100vh - 43px)}.sidebar{display:block;overflow-y:auto}.linked-views{grid-template-columns:1fr 1fr}}
+.panel-icons{display:flex;align-items:center;gap:12px}.panel-info{font-size:13px;cursor:help;flex-shrink:0}
+.summary-footer{flex:none;border-top:1px solid #385471;padding:4px 7px 6px;background:#14283d}
+.summary-group-title{color:#9edbff;font-weight:750;font-size:10px;margin:4px 0 3px}
+.summary-kpis{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.summary-kpis>div{border:1px solid #304b64;background:#192e43;padding:4px 5px;border-radius:4px;min-width:0}
+.summary-kpis span{font-size:9px;color:#a9c5de;display:block;white-space:nowrap}
+.summary-kpis b{font-size:12px;color:#f1f8ff;display:block;white-space:nowrap}
+.well-table{font-size:9px}.well-table th{font-size:8px;padding:5px 2px}.well-table td{padding:6px 2px}
+.rotation-setting{display:flex;align-items:center;gap:6px;min-width:160px;font-size:10px;color:#c0d8ed}
+.rotation-setting input{width:75px}.rotation-setting output{min-width:33px}
+
+/* v22: Auto-rotation controls live INSIDE the 3D panel, not on the simulation timeline. */
+.scene-rotation-controls{position:absolute;bottom:9px;left:10px;z-index:8;display:flex;align-items:center;gap:9px;padding:5px 8px;border:1px solid #45617c;border-radius:6px;background:rgba(9,19,32,.91);box-shadow:0 2px 8px rgba(0,0,0,.3);max-width:calc(100% - 20px)}
+.scene-rotation-controls button{border:1px solid #517797;border-radius:5px;padding:5px 9px;background:#1b3953;color:#e5edf7;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.scene-rotation-controls button.selected{background:#205a78;border-color:#70ddff;color:white}
+.scene-rotation-controls .rotation-setting{min-width:0;gap:5px;white-space:nowrap}
+.scene-rotation-controls .rotation-setting input{width:clamp(45px,8vw,95px)}
+.scene-rotation-controls .rotation-setting output{min-width:37px}
+/* v23: on-map add controls and compact editable well locations. */
+.map-actions{position:absolute;top:8px;left:8px;z-index:7;display:flex;align-items:center;gap:5px;flex-wrap:wrap;max-width:calc(100% - 16px);pointer-events:none}
+.map-actions>*{pointer-events:auto}.map-actions button{background:rgba(9,19,32,.94);border:1px solid #4e7797;border-radius:5px;color:#f0f7ff;font:700 11px Aptos, sans-serif;padding:5px 8px;cursor:pointer}
+.map-actions button.selected{background:#225e76;border-color:#7ce1ff}.map-actions button:disabled{opacity:.45;cursor:not-allowed}.map-actions #mapHint{font:10px Aptos, sans-serif;color:#dceef9;text-shadow:0 1px 3px #071320;background:rgba(9,19,32,.75);border-radius:4px;padding:3px 5px}
+.well-remove{border:1px solid #8e5168;background:#472339;color:#ffdee7;border-radius:4px;padding:3px 7px;font-size:10px;cursor:pointer}.well-remove:disabled{opacity:.36;cursor:not-allowed}
+.well-xy{display:grid;grid-template-columns:1fr 1fr;gap:7px}.well-xy label{font-size:10px;color:#bdd5e9}.well-xy input{display:block;width:100%;min-width:0;box-sizing:border-box;background:#0a1b2b;border:1px solid #37566d;color:#fff;border-radius:4px;padding:3px 5px;font:11px Aptos, sans-serif}
+.well-table .selected-monitor{background:#23506a!important}.well-table tr[data-pindex]{cursor:pointer}
+.export-heading{display:flex;justify-content:space-between;align-items:center;gap:10px}.export-heading .panel-info{cursor:help;flex-shrink:0}.export-status{font-size:11px} 
+/* v27: small uniformly sized info icons, even within the independently scrolling sidebar. */
+.compact-i{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:14px;height:14px;min-width:14px;max-width:14px;min-height:14px;max-height:14px;padding:0;border:1px solid #6192b3;border-radius:50%;background:#193149;color:#c8ebff;font:700 10px/1 Aptos, sans-serif;vertical-align:middle;cursor:help;flex:none}
+.sidebar [data-help]{max-width:100%;} .sidebar h2,.sidebar .top{min-width:0;} .sidebar .panel-info{font-size:12px;line-height:1;max-width:16px;max-height:16px;display:inline-flex;align-items:center;justify-content:center}
+.piezometer-slider-row{padding:8px 0 10px;border-bottom:1px solid #304b64}.piezometer-slider-row:last-child{border-bottom:0}.piez-selector{font:700 11px Aptos, sans-serif;background:#162a3e;border:1px solid #49718e;color:#79dffe;border-radius:4px;padding:4px 9px;cursor:pointer;margin-bottom:5px}.piez-selector.selected{background:#245571;border-color:#6de2fa;color:#fff}.piezometer-slider-row .control{margin:5px 0 7px}.piezometer-slider-row input[type=range]{width:100%}
+
+/* v28 single-font scientific interface, vertical in-map legend and recovered chart space. */
+:root,body,button,input,output,select,option,textarea,label,table,th,td,svg,canvas,*{font-family:Aptos, sans-serif !important}
+.viewbar{padding:2px 8px 1px;min-height:16px}.viewbar small{font-size:10px}
+.layout{gap:6px;padding:5px;height:calc(100vh - 39px)}
+.visuals{padding:0 5px 3px;gap:5px}.subview-title{padding:4px 7px}
+.bottom{padding:4px 8px 5px}header{padding:6px 10px}header small{display:none}
+/* Dedicated plot legend is part of canvas rendering, never a separate dashboard row. */
+
+/* v1.29 mandatory single-row playback layout: buttons left, time labels + scrubber right. */
+.bottom{display:flex!important;flex-direction:row!important;align-items:center!important;gap:12px!important;padding:5px 9px!important;min-height:44px!important;flex:none!important}
+.bottom>.buttons{display:flex!important;flex:0 0 auto!important;flex-wrap:nowrap!important;align-items:center!important;gap:5px!important;margin:0!important}
+.bottom>.buttons button{white-space:nowrap;padding:5px 8px;font-size:11px;line-height:1.2}
+.bottom>.timeline-area{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.bottom .timeline-area .timehead{margin:0!important;display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:nowrap}
+.bottom .timeline-area .timehead strong{font-size:12px;line-height:1.1}
+.bottom .timeline-area #time{width:100%;margin:0;height:15px;display:block}
+@media(max-width:870px){.bottom{gap:6px!important}.bottom>.buttons{flex-wrap:wrap!important;max-width:44%}.bottom>.buttons button{font-size:10px;padding:4px 5px}.bottom .timeline-area .timehead{font-size:10px}}
+</style>
+<!-- MODEL 1 v20 FIXED COLOR SPECIFICATION — MANDATORY FOR REPRODUCTION
+UI: page #091320; major panel #111F31; plot background #0D1A2B; subtitle panels #192C42; controls #15273C; text #E5EDF7.
+DRAW DOWN COLOR SCALE, exactly 6 equally spaced linear stops, low to high:
+#1659AA -> #1BC8D7 -> #64D77A -> #F6E35C -> #F28439 -> #A52943.
+WELLS: W1 #FF9E5B, W2 #7DE6AA, W3 #D8A7FF.
+SECTION GUIDES: X-X' #FFDF73, Y-Y' #70DDFF.
+SECTION LABELS: #FFFFFF characters on opaque #071320 rounded background; outline equals guide color.
+MONITORING P1: #FFFFFF filled diamond, #071320 outline and #6DE2FA inner stroke; P1 label outline #6DE2FA.
+3D AXES: X #FF7777; Y #72E7A1; Z #77BAFF.
+CONTOURS: rgba(255,255,255,.82).
+Every copy/reimplementation of Model 1 must preserve these values exactly, including exported video.
+-->
+</head><body><header><div><h1>PlayGroundWater MODEL 1 - Transient Multi-Well Pumping - v1.29</h1></div></header><div class="layout"><section class="main"><div class="viewbar" aria-hidden="true" style="display:none"><span id="yGuide">0</span><span id="xGuide">0</span></div><div class="visuals linked-views"><div class="subview plan-panel"><div class="subview-title"><span>Top view - Piezometric contours</span><span class="muted" data-help="Top view: square plan map of Theis drawdown with hydraulic-head contours. Add or drag wells (1–5) and piezometers (1–3); select or move a piezometer to locate the intersection of the X–X′ and Y–Y′ cross-sections. The two colored lines show these section locations; labels X/X′ and Y/Y′ indicate direction. The four views share one Theis model and one simulation clock; each piezometer fixes the locations of the X–X′ and Y–Y′ sections. The LIVE Data panel updates automatically." tabindex="0">ⓘ</span></div><div class="plot"><canvas id="plan"></canvas><div class="map-actions"><button id="addWell" type="button">+ Add well</button><button id="addPiezometer" type="button">+ Add piezometer</button><span id="mapHint" aria-live="polite"></span></div></div></div><div class="subview y-panel"><div class="subview-title"><span>Y–Y′ · Piezometric profile along Y</span><span class="panel-icons"><span class="muted" id="ySectionLabel">x = 0 m</span><span class="muted panel-info" data-help="Y–Y′: hydraulic head along the north–south direction at the selected X coordinate. The LIVE Data table shows current and historical drawdown for the wells and monitoring point." tabindex="0">ⓘ</span></span></div><div class="plot y-layout"><div class="y-graph"><canvas id="sectionY"></canvas></div><div class="well-summary"><div class="summary-heading">LIVE Data</div><div class="summary-scroll"><table class="well-table"><thead><tr><th>Well</th><th>X<br>(m)</th><th>Y<br>(m)</th><th>Rate<br>(m³/day)</th><th>Drawdown<br>(m)</th><th>Max s<br>(m)</th><th>At day</th></tr></thead><tbody id="wellSummaryBody"></tbody></table></div><div class="summary-footer"><div class="summary-group-title">Extremes</div><div class="summary-kpis"><div><span>Max drawdown</span><b id="maxdraw">0.00 m</b></div><div><span>Max hydraulic head</span><b id="maxhead">100.00 m</b></div></div><div class="summary-group-title">Activity</div><div class="summary-kpis"><div><span>Active pumping</span><b id="pump">0 m³/day</b></div><div><span>Active wells</span><b id="active">0 / 3</b></div></div></div></div></div></div><div class="subview x-panel"><div class="subview-title"><span>X–X′ · Piezometric profile along X</span><span class="panel-icons"><span class="muted" id="xSectionLabel">y = 0 m</span><span class="muted panel-info" data-help="X–X′: hydraulic-head profile from west to east at the selected Y coordinate. Select or drag a piezometer on the top view to set the X–X′ location." tabindex="0">ⓘ</span></span></div><div class="plot"><canvas id="section"></canvas></div></div><div class="subview three-panel"><div class="subview-title"><span>3D drawdown depression surface</span><span class="muted" data-help="Left-drag to rotate or tilt. Press and drag the mouse wheel (middle button) to move the whole 3D model. Scroll to zoom. XYZ axes rotate and move with the surface." tabindex="0">ⓘ</span></div><div class="plot scene-wrap"><canvas id="scene"></canvas><div class="scene-rotation-controls"><button id="autoRotate" aria-pressed="false" data-help="Start or stop continuous 360° rotation of the 3D groundwater surface." tabindex="0">360°</button><label class="rotation-setting" data-help="Adjust the continuous 3D rotation rate in degrees per second." tabindex="0">Speed <input type="range" id="rotationSpeed" min="2" max="90" value="18" step="1"><output id="rotationSpeedVal">18°/s</output></label></div></div></div></div><div class="bottom"><div class="buttons"><button class="primary" id="play">▶ Play</button><button id="resetTime">↺ Reset</button><button id="preset">Featured example</button><button id="resetView">Reset 3D view</button></div><div class="timeline-area"><div class="timehead"><strong>Simulation time: <span id="day">35</span> days</strong><span class="muted" id="durationLabel">0–120 days</span></div><input id="time" type="range" min="0" max="120" step="1" value="35"></div></div></section><aside class="panel sidebar"><div class="section"><h2 data-help="Set the total model run time; all graphs follow the selected time." tabindex="0">Simulation duration ⓘ</h2><div class="control"><div class="top"><label for="duration" data-help="Choose a duration from 1 to 1,000 days; default is 120 days." tabindex="0">Total simulation period ⓘ</label><output id="durationVal">120 days</output></div><input id="duration" type="range" min="1" max="1000" step="1" value="120"></div></div><div class="section"><h2>3D display settings</h2><div class="control"><div class="top"><label for="ve">Vertical exaggeration (Z : XY)</label><output id="veval">100×</output></div><input id="ve" type="range" min="1" max="500" step="1" value="100"></div></div><div class="section"><h2>Aquifer properties</h2><div class="control"><div class="top"><label for="T">Transmissivity T</label><output id="Tval"></output></div><input id="T" type="range" min="50" max="2500" step="25" value="500"></div><div class="control"><div class="top"><label for="S">Storativity S (linear)</label><output id="Sval"></output></div><input id="S" type="range" min="0.00001" max="0.01" step="0.00001" value="0.0001"></div><div class="control"><div class="top"><label for="H">Initial head</label><output id="Hval"></output></div><input id="H" type="range" min="20" max="200" step="5" value="100"></div></div><div id="wells"></div><div id="piezometerControls" class="section"><h2>Monitoring piezometers <span class="compact-i" data-help="Select P1, P2, or P3 and change its X and Y coordinates using sliders. The selected point defines both cross-section locations. Dragging a point on the map also updates these sliders." tabindex="0" aria-label="Piezometer settings information">i</span></h2><div id="piezometerSliderRows"></div></div><div class="section export-section" id="videoExport"><h2 class="export-heading"><span>🎬 Export full dashboard video</span><span class="muted panel-info" tabindex="0" data-help="Export one WebM video of the four synchronized scientific views, the moving cross-section guides, and the LIVE Data table with well and piezometer pumping/drawdown values, historical maxima, and occurrence days. The video includes the drawdown legend, creator credit, and a simulation-parameter introduction. Choose recording length and resolution, then export." aria-label="Video export information">ⓘ</span></h2><div class="export-row"><label>Animation length<select id="exportLength"><option value="30">30 seconds</option><option value="60" selected>60 seconds</option><option value="120">120 seconds</option></select></label><label>Resolution<select id="exportRes"><option value="1280">1280 × 720</option><option value="1920" selected>1920 × 1080</option></select></label></div><div class="export-actions"><button class="primary" id="exportStart">Export dashboard video</button><button id="exportCancel" disabled>Cancel</button></div><progress id="exportProgress" value="0" max="100"></progress><div class="export-status" id="exportStatus" aria-live="polite">Ready</div></div><div class="section" style="display:none"><h2>Model formulation</h2><div class="note">Each well contributes s = Q/(4πT) · E₁(r²S/(4TΔt)) after starting. Stopping is represented by a negative pumping-rate step. Contributions from all wells are summed. Pumping rates are positive for extraction. Drawdown at each well is evaluated using a physical well radius of 0.2 m as the minimum radial distance, with contributions from all pumping wells.</div></div></aside></div><script>
+(()=>{'use strict';const $=id=>document.getElementById(id),cv=$('scene'),ctx=cv.getContext('2d');const planCv=$('plan'),sectionCv=$('section'),sectionYCv=$('sectionY'),planCtx=planCv.getContext('2d'),sectionCtx=sectionCv.getContext('2d'),sectionYCtx=sectionYCv.getContext('2d');let crossX=0,crossY=0,planRect=null;const MODEL1_COLORS=Object.freeze({
+  background:'#091320',panel:'#111F31',plot:'#0D1A2B',
+  guideX:'#FFDF73',guideY:'#70DDFF',monitor:'#6DE2FA',
+  labelBackground:'#071320',labelText:'#FFFFFF',
+  well1:'#FF9E5B',well2:'#7DE6AA',well3:'#D8A7FF',well4:'#F7D267',well5:'#F28CCB',
+  axisX:'#FF7777',axisY:'#72E7A1',axisZ:'#77BAFF',
+  contour:'rgba(255,255,255,.82)',
+  drawdown:['#1659AA','#1BC8D7','#64D77A','#F6E35C','#F28439','#A52943']
+});
+const DEFAULT_W=[{x:-500,y:-250,q:600,start:0,stop:75,color:MODEL1_COLORS.well1},{x:450,y:-200,q:450,start:10,stop:95,color:MODEL1_COLORS.well2},{x:0,y:500,q:550,start:25,stop:110,color:MODEL1_COLORS.well3}];const W=DEFAULT_W.map(w=>({...w}));const wellColors=[MODEL1_COLORS.well1,MODEL1_COLORS.well2,MODEL1_COLORS.well3,MODEL1_COLORS.well4,MODEL1_COLORS.well5];const P=[{x:0,y:0}];let activeP=0,mapAction=null;let duration=120,time=35,T=500,S=1e-4,H=100,rot=-.62,tilt=.72,zoom=1,panX=0,panY=0,verticalExaggeration=100,playing=false,last=0,dirty=true,autoRotating=false,rotationSpeed=18;const grid=49,L=2000;function E1(x){if(x<=0)return 1e10;if(x>40)return 0;const gamma=.5772156649015329;if(x<=1){let sum=0,term=1;for(let k=1;k<=60;k++){term*=(-x)/k;let a=term/k;sum+=a;if(Math.abs(a)<1e-15)break}return -gamma-Math.log(x)-sum;}let b=x+1,c=1e30,d=1/b,h=d;for(let i=1;i<=100;i++){let a=-i*i;b+=2;d=1/(a*d+b);c=b+a/c;if(Math.abs(c)<1e-30)c=1e-30;let del=c*d;h*=del;if(Math.abs(del-1)<1e-12)break;}return h*Math.exp(-x)}function drawAt(x,y,t){let s=0;for(const w of W){const r2=Math.max(0.2**2,(x-w.x)**2+(y-w.y)**2);if(t>w.start)s+=w.q/(4*Math.PI*T)*E1(r2*S/(4*T*(t-w.start)));if(t>w.stop)s-=w.q/(4*Math.PI*T)*E1(r2*S/(4*T*(t-w.stop)));}return Math.max(0,s)}let vals=[],max=0;// Historical maxima are evaluated from day zero through the current time,
+// not over future days. Cache daily values; include fractional current time.
+let peakCacheKey='',peakDaily=[];let monitorPeakKey='',monitorDaily=[];
+function wellPeaks(atTime){
+ const key=JSON.stringify([T,S,duration,W.map(w=>[w.x,w.y,w.q,w.start,w.stop])]);
+ if(key!==peakCacheKey){
+   peakCacheKey=key;peakDaily=W.map(w=>{
+     const a=new Float64Array(duration+1);
+     for(let d=0;d<=duration;d++)a[d]=drawAt(w.x,w.y,d);
+     return a;
+   });
+ }
+ return W.map((w,i)=>{
+   let best=0,at=0;const a=peakDaily[i];
+   for(let d=0;d<=Math.floor(atTime);d++){
+     if(a[d]>best){best=a[d];at=d;}
+   }
+   // Evaluate exact fractional playback position as well.
+   if(atTime>Math.floor(atTime)){
+     const current=drawAt(w.x,w.y,atTime);
+     if(current>best){best=current;at=atTime;}
+   }
+   return {value:best,day:at};
+ });
+}
+// P1 is the intersection of the draggable cross-section guides (crossX, crossY).
+// Cache is invalidated whenever its position or the aquifer/pumping parameters change.
+function monitorPeak(atTime){
+ const key=JSON.stringify([crossX,crossY,T,S,duration,W.map(w=>[w.x,w.y,w.q,w.start,w.stop])]);
+ if(key!==monitorPeakKey){
+   monitorPeakKey=key;
+   monitorDaily=new Float64Array(duration+1);
+   for(let d=0;d<=duration;d++)monitorDaily[d]=drawAt(crossX,crossY,d);
+ }
+ let best=0,at=0;
+ for(let d=0;d<=Math.min(duration,Math.floor(atTime));d++){
+   if(monitorDaily[d]>best){best=monitorDaily[d];at=d;}
+ }
+ if(atTime>Math.floor(atTime)){
+   const v=drawAt(crossX,crossY,atTime);
+   if(v>best){best=v;at=atTime;}
+ }
+ return {value:best,day:at};
+}
+function peakAtPoint(x,y,atTime){let best=0,day=0;const endpoints=new Set([0,Math.floor(atTime),atTime]);for(const w of W){if(w.start>=0&&w.start<=atTime)endpoints.add(w.start);if(w.stop>=0&&w.stop<=atTime)endpoints.add(w.stop)}for(let d=0;d<=Math.floor(atTime);d++)endpoints.add(d);for(const d of endpoints){if(d<0||d>atTime)continue;const v=drawAt(x,y,d);if(v>best){best=v;day=d}}return {value:best,day};}
+function syncP(){crossX=P[activeP].x;crossY=P[activeP].y;syncPiezometerSliderValues();}
+function syncPiezometerSliderValues(){
+ P.forEach((p,i)=>['x','y'].forEach(axis=>{const slider=document.getElementById(`p${axis}${i}`),out=document.getElementById(`p${axis}${i}v`);if(slider)slider.value=Math.round(p[axis]+1000);if(out)out.textContent=Math.round(p[axis]+1000)+' m';}));
+ document.querySelectorAll('[data-piez-select]').forEach((b,i)=>{b.classList.toggle('selected',i===activeP);b.setAttribute('aria-pressed',String(i===activeP));});
+}
+function renderPiezometerControls(){
+ const host=$('piezometerSliderRows');host.innerHTML='';
+ P.forEach((p,i)=>{
+  const wrap=document.createElement('div');wrap.className='piezometer-slider-row';
+  wrap.innerHTML=`<button class="piez-selector" type="button" data-piez-select="${i}" aria-pressed="${i===activeP}">◆ P${i+1} ${i===activeP?'(active)':''}</button>${['x','y'].map(axis=>`<div class="control"><div class="top"><label for="p${axis}${i}" data-help="P${i+1} ${axis.toUpperCase()} coordinate (metres), between 0 and 2000. Drag the slider or move P${i+1} on the map." tabindex="0">${axis.toUpperCase()} (m) ⓘ</label><output id="p${axis}${i}v">${Math.round(p[axis])} m</output></div><input id="p${axis}${i}" aria-label="P${i+1} ${axis.toUpperCase()} coordinate" type="range" min="0" max="2000" step="1" value="${Math.round(p[axis]+1000)}"></div>`).join('')}`;
+  host.appendChild(wrap);
+  wrap.querySelector('[data-piez-select]').addEventListener('click',()=>{activeP=i;syncP();dirty=true;render();renderPiezometerControls()});
+  ['x','y'].forEach(axis=>wrap.querySelector(`#p${axis}${i}`).addEventListener('input',e=>{p[axis]=Number(e.target.value)-1000;activeP=i;syncP();invalidateAndRefresh()}));
+ });
+ syncPiezometerSliderValues();
+}
+
+function invalidateAndRefresh(controls=false){peakCacheKey='';monitorPeakKey='';dirty=true;if(controls)wellControls();render();}
+function updateMapActions(){const b=$('addWell');b.disabled=W.length>=5;b.title=W.length>=5?'Maximum five pumping wells':'';const pb=$('addPiezometer');pb.disabled=P.length>=3;pb.title=P.length>=3?'Maximum three piezometers':'';if(P.length>=3&&mapAction==='piezometer')mapAction=null;$('mapHint').textContent=mapAction?`Click map to place ${mapAction==='well'?'new well':'new piezometer'}`:`${W.length}/5 wells · ${P.length}/3 piezometers`;$('addWell').classList.toggle('selected',mapAction==='well');$('addPiezometer').classList.toggle('selected',mapAction==='piezometer');}
+$('addWell').addEventListener('click',()=>{if(W.length>=5)return;mapAction=mapAction==='well'?null:'well';updateMapActions()});
+$('addPiezometer').addEventListener('click',()=>{if(P.length>=3)return;mapAction=mapAction==='piezometer'?null:'piezometer';updateMapActions()});
+function compute(){vals=[];max=0;for(let j=0;j<grid;j++){const row=[];for(let i=0;i<grid;i++){let v=drawAt(-1000+i*L/(grid-1),-1000+j*L/(grid-1),time);row.push(v);max=Math.max(max,v)}vals.push(row)}$('day').textContent=Math.round(time);$('maxdraw').textContent=max.toFixed(2)+' m';$('maxhead').textContent=(H-Math.min(...vals.flat())).toFixed(2)+' m';let active=W.filter(w=>time>=w.start&&time<w.stop);$('pump').textContent=active.reduce((a,w)=>a+w.q,0).toLocaleString()+' m³/day';$('active').textContent=active.length+' / '+W.length;const peaks=wellPeaks(time);$('wellSummaryBody').innerHTML=W.map((w,i)=>{const q=time>=w.start&&time<w.stop?w.q:0;const s=drawAt(w.x,w.y,time);const pk=peaks[i];return `<tr><td class="well-label" style="color:${w.color}">● W${i+1}</td><td>${Math.round(w.x+1000)}</td><td>${Math.round(w.y+1000)}</td><td>${q.toLocaleString()}</td><td>${s.toFixed(2)}</td><td>${pk.value.toFixed(2)}</td><td>${Number(pk.day.toFixed(1))}</td></tr>`}).join('')+P.map((p,i)=>{const pk=peakAtPoint(p.x,p.y,time);return `<tr class="monitor-row ${i===activeP?'selected-monitor':''}" title="Click to activate P${i+1} and its cross sections" data-pindex="${i}"><td class="well-label">◆ P${i+1}</td><td>${Math.round(p.x+1000)}</td><td>${Math.round(p.y+1000)}</td><td>–</td><td>${drawAt(p.x,p.y,time).toFixed(2)}</td><td>${pk.value.toFixed(2)}</td><td>${Number(pk.day.toFixed(1))}</td></tr>`}).join('');dirty=false}
+function color(t){t=Math.max(0,Math.min(1,t));let stops=MODEL1_COLORS.drawdown.map(hex=>[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16))),p=t*5,k=Math.min(4,Math.floor(p)),f=p-k,a=stops[k],b=stops[k+1];return `rgb(${a.map((v,i)=>Math.round(v*(1-f)+b[i]*f)).join(',')})`}
+function prepCanvas(canvas,c){const r=canvas.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1);if(r.width<2||r.height<2)return null;canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);c.setTransform(d,0,0,d,0,0);c.fillStyle='#0d1a2b';c.fillRect(0,0,r.width,r.height);return {w:r.width,h:r.height}}
+function drawPlan(){const size=prepCanvas(planCv,planCtx);if(!size)return;const c=planCtx,{w,h}=size;
+// The plotted domain is a genuine square, centered in the available rectangular canvas.
+const margins={l:44,r:76,t:13,b:31},side=Math.max(0,Math.min(w-margins.l-margins.r,h-margins.t-margins.b));if(side<15)return;
+const left=margins.l+Math.max(0,(w-margins.l-margins.r-side)/2),top=margins.t+Math.max(0,(h-margins.t-margins.b-side)/2);planRect={left,top,side,w,h};
+const xp=x=>left+(x+1000)/2000*side,yp=y=>top+(1000-y)/2000*side,n=grid-1;
+for(let j=0;j<n;j++)for(let i=0;i<n;i++){const x=-1000+i*L/n,y=-1000+j*L/n;c.fillStyle=color(max?((vals[j][i]+vals[j][i+1]+vals[j+1][i]+vals[j+1][i+1])/4)/max:0);c.fillRect(xp(x),yp(y+L/n),side/n+.5,side/n+.5)}
+if(max>1e-8){const interval=Math.pow(10,Math.floor(Math.log10(max/6))),step=[1,2,5,10].map(k=>k*interval).find(v=>max/v<=12)||10*interval;const levels=[];for(let z=step;z<max;z+=step)levels.push(z);c.lineWidth=1.05;c.strokeStyle='rgba(255,255,255,.82)';
+for(const level of levels){c.beginPath();for(let j=0;j<n;j++)for(let i=0;i<n;i++){const a=vals[j][i],b=vals[j][i+1],d=vals[j+1][i],e=vals[j+1][i+1],v=[[a,i,j],[b,i+1,j],[e,i+1,j+1],[d,i,j+1]],edges=[];for(let k=0;k<4;k++){const u=v[k],z=v[(k+1)%4];if((u[0]<level)!=(z[0]<level)){const f=(level-u[0])/(z[0]-u[0]);edges.push([xp(-1000+(u[1]+f*(z[1]-u[1]))*L/n),yp(-1000+(u[2]+f*(z[2]-u[2]))*L/n)])}}for(let k=0;k+1<edges.length;k+=2){c.moveTo(...edges[k]);c.lineTo(...edges[k+1])}}c.stroke()}}
+// Movable, orthogonal section guides.
+c.lineWidth=2;c.setLineDash([6,4]);c.strokeStyle=MODEL1_COLORS.guideX;c.beginPath();c.moveTo(xp(-1000),yp(crossY));c.lineTo(xp(1000),yp(crossY));c.stroke();c.strokeStyle=MODEL1_COLORS.guideY;c.beginPath();c.moveTo(xp(crossX),yp(-1000));c.lineTo(xp(crossX),yp(1000));c.stroke();c.setLineDash([]);
+// High-contrast, fixed-palette section labels: opaque dark tag + white text + guide-colored border.
+function guideTag(text,x,y,border){
+ c.save();c.font='bold 12px Aptos, sans-serif';c.textAlign='left';c.textBaseline='middle';
+ const tw=c.measureText(text).width, bw=tw+14,bh=20;
+ const px=Math.max(left+2,Math.min(left+side-bw-2,x));
+ const py=Math.max(top+2,Math.min(top+side-bh-2,y));
+ c.fillStyle='#071320';c.strokeStyle=border;c.lineWidth=1.5;
+ c.beginPath();c.roundRect(px,py,bw,bh,4);c.fill();c.stroke();
+ c.fillStyle='#FFFFFF';c.fillText(text,px+7,py+bh/2);c.restore();
+}
+guideTag('X',xp(-1000)+4,yp(crossY)-27,'#FFDF73');
+guideTag('X′',xp(1000)-32,yp(crossY)-27,'#FFDF73');
+guideTag('Y',xp(crossX)+8,yp(1000)+5,'#70DDFF');
+guideTag('Y′',xp(crossX)+8,yp(-1000)-25,'#70DDFF');
+// Selectable piezometers; active one defines the X–X′ / Y–Y′ intersection.
+P.forEach((p,i)=>{const px=xp(p.x),py=yp(p.y);c.save();c.fillStyle=i===activeP?'#FFFFFF':'#6DE2FA';c.strokeStyle='#071320';c.lineWidth=3;c.beginPath();c.moveTo(px,py-7);c.lineTo(px+7,py);c.lineTo(px,py+7);c.lineTo(px-7,py);c.closePath();c.fill();c.stroke();c.strokeStyle='#6DE2FA';c.lineWidth=1.5;c.stroke();c.restore();guideTag('P'+(i+1),px+9,py+8,'#6DE2FA')});
+for(let i=0;i<W.length;i++){const well=W[i];c.beginPath();c.arc(xp(well.x),yp(well.y),5,0,2*Math.PI);c.fillStyle=well.color;c.fill();c.strokeStyle='#091320';c.lineWidth=1.5;c.stroke();c.fillStyle='#fff';c.font='bold 10px Aptos, sans-serif';c.fillText('W'+(i+1),xp(well.x)+7,yp(well.y)-6)}
+c.strokeStyle='#94b1ce';c.lineWidth=1;c.strokeRect(left,top,side,side);c.fillStyle='#aabed5';c.font='10px Aptos, sans-serif';c.textAlign='center';for(const x of [-1000,0,1000])c.fillText(x+1000,xp(x),top+side+17);c.textAlign='right';for(const y of [-1000,0,1000])c.fillText(y+1000,left-7,yp(y)+3);c.textAlign='left';
+// v28: vertical palette INSIDE the upper-left top-view canvas.
+// All 6 fixed palette stops are interpolated by the same color() function as the Theis map.
+const lgX=left+side+14,lgY=top+16,lgH=Math.max(90,side-46),lgW=13;
+for(let k=0;k<lgH;k++){c.fillStyle=color(1-k/Math.max(1,lgH-1));c.fillRect(lgX,lgY+k,lgW,1.5)}
+c.strokeStyle='#a7c0d7';c.lineWidth=1;c.strokeRect(lgX,lgY,lgW,lgH);
+c.font='bold 10px Aptos, sans-serif';c.fillStyle='#e6f2ff';c.textAlign='left';
+c.fillText(max.toFixed(2)+' m',lgX-1,lgY-6);c.fillText('0 m',lgX,lgY+lgH+12);
+c.save();c.translate(lgX+lgW+14,lgY+lgH/2);c.rotate(-Math.PI/2);c.textAlign='center';c.fillText('Drawdown (m) · high ↑',0,0);c.restore();
+$('xGuide').textContent=Math.round(crossX+1000);$('yGuide').textContent=Math.round(crossY+1000);$('xSectionLabel').textContent='y = '+Math.round(crossY+1000)+' m';$('ySectionLabel').textContent='x = '+Math.round(crossX+1000)+' m'}
+function drawSection(){const size=prepCanvas(sectionCv,sectionCtx);if(!size)return;const c=sectionCtx,{w,h}=size,m={l:planRect?planRect.left:44,r:17,t:13,b:31},dw=planRect?planRect.side:w-m.l-m.r,dh=h-m.t-m.b;if(dw<30||dh<30)return;
+// X profile uses the same left/right margins as the top-view map.
+const heads=Array.from({length:161},(_,i)=>H-drawAt(-1000+i*2000/160,crossY,time));const lo=Math.min(...heads,H),hi=Math.max(...heads,H),span=Math.max(1,(hi-lo)*1.25),top=hi+span*.10,bottom=top-span;const xp=x=>m.l+(x+1000)/2000*dw,yp=v=>m.t+(top-v)/(top-bottom)*dh;
+c.strokeStyle='#304c69';c.lineWidth=1;for(let k=0;k<=4;k++){const v=bottom+(top-bottom)*k/4,y=yp(v);c.beginPath();c.moveTo(m.l,y);c.lineTo(m.l+dw,y);c.stroke();c.fillStyle='#aebed2';c.font='10px Aptos, sans-serif';c.textAlign='right';c.fillText(v.toFixed(1),m.l-5,y+3)}
+c.beginPath();heads.forEach((v,i)=>i?c.lineTo(xp(-1000+i*2000/160),yp(v)):c.moveTo(xp(-1000),yp(v)));c.lineTo(xp(1000),yp(bottom));c.lineTo(xp(-1000),yp(bottom));c.closePath();c.fillStyle='rgba(43,146,213,.20)';c.fill();c.beginPath();heads.forEach((v,i)=>i?c.lineTo(xp(-1000+i*2000/160),yp(v)):c.moveTo(xp(-1000),yp(v)));c.strokeStyle='#ffdf73';c.lineWidth=2.5;c.stroke();c.setLineDash([4,4]);c.strokeStyle='#f2bd6c';c.beginPath();c.moveTo(m.l,yp(H));c.lineTo(m.l+dw,yp(H));c.stroke();c.setLineDash([]);
+for(let i=0;i<W.length;i++){const well=W[i],xx=xp(well.x);c.strokeStyle=well.color;c.lineWidth=.8;c.beginPath();c.moveTo(xx,m.t);c.lineTo(xx,h-m.b);c.stroke();c.fillStyle=well.color;c.font='bold 10px Aptos, sans-serif';c.textAlign='left';c.fillText('W'+(i+1),xx+3,m.t+11)}
+c.strokeStyle='#94b1ce';c.strokeRect(m.l,m.t,dw,dh);c.fillStyle='#aebed2';c.font='10px Aptos, sans-serif';c.textAlign='center';for(const x of [-1000,0,1000])c.fillText(x+1000,xp(x),h-10);c.textAlign='left';c.fillText('Head (m)',5,11);c.fillText('X profile · y = '+Math.round(crossY+1000)+' m',m.l+8,m.t+13)}
+function drawSectionY(){const size=prepCanvas(sectionYCv,sectionYCtx);if(!size)return;const c=sectionYCtx,{w,h}=size,m={l:52,r:22,t:13,b:31},dw=w-m.l-m.r,dh=h-m.t-m.b;if(dw<30||dh<30)return;
+// Y profile is rotated in the layout: spatial Y is vertical, hydraulic head horizontal.
+const heads=Array.from({length:161},(_,i)=>H-drawAt(crossX,-1000+i*2000/160,time));const lo=Math.min(...heads,H),hi=Math.max(...heads,H),span=Math.max(1,(hi-lo)*1.25),right=hi+span*.1,left=right-span;const xp=v=>m.l+(v-left)/(right-left)*dw,yp=y=>m.t+(1000-y)/2000*dh;
+c.strokeStyle='#304c69';c.lineWidth=1;for(let k=0;k<=4;k++){const v=left+(right-left)*k/4,x=xp(v);c.beginPath();c.moveTo(x,m.t);c.lineTo(x,h-m.b);c.stroke();c.fillStyle='#aebed2';c.font='10px Aptos, sans-serif';c.textAlign='center';c.fillText(v.toFixed(1),x,h-10)}
+c.beginPath();heads.forEach((v,i)=>i?c.lineTo(xp(v),yp(-1000+i*2000/160)):c.moveTo(xp(v),yp(-1000)));c.lineTo(xp(left),yp(1000));c.lineTo(xp(left),yp(-1000));c.closePath();c.fillStyle='rgba(43,146,213,.20)';c.fill();c.beginPath();heads.forEach((v,i)=>i?c.lineTo(xp(v),yp(-1000+i*2000/160)):c.moveTo(xp(v),yp(-1000)));c.strokeStyle='#70ddff';c.lineWidth=2.5;c.stroke();c.setLineDash([4,4]);c.strokeStyle='#f2bd6c';c.beginPath();c.moveTo(xp(H),m.t);c.lineTo(xp(H),h-m.b);c.stroke();c.setLineDash([]);
+for(let i=0;i<W.length;i++){const well=W[i],yy=yp(well.y);c.strokeStyle=well.color;c.lineWidth=.8;c.beginPath();c.moveTo(m.l,yy);c.lineTo(w-m.r,yy);c.stroke();c.fillStyle=well.color;c.font='bold 10px Aptos, sans-serif';c.textAlign='left';c.fillText('W'+(i+1),m.l+4,yy-4)}
+c.strokeStyle='#94b1ce';c.strokeRect(m.l,m.t,dw,dh);c.fillStyle='#aebed2';c.font='10px Aptos, sans-serif';c.textAlign='right';for(const y of [-1000,0,1000])c.fillText(y+1000,m.l-7,yp(y)+3);c.textAlign='left';c.fillText('Head (m) →',m.l+5,11);c.fillText('Y profile · x = '+Math.round(crossX+1000)+' m',m.l+6,m.t+13)}
+function render(){updateMapActions();const dpr=Math.min(2,window.devicePixelRatio||1),rect=cv.getBoundingClientRect();if(rect.width<1)return;let cw=Math.round(rect.width*dpr),ch=Math.round(rect.height*dpr);if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch}ctx.setTransform(dpr,0,0,dpr,0,0);let ww=rect.width,hh=rect.height;ctx.clearRect(0,0,ww,hh);ctx.fillStyle='#0d1a2b';ctx.fillRect(0,0,ww,hh);if(dirty)compute();const scale=Math.min(ww/3000,hh/2100)*zoom,cs=Math.cos(rot),sn=Math.sin(rot),st=Math.sin(tilt),ct=Math.cos(tilt),zscale=verticalExaggeration;function project(x,y,s){let a=x*cs-y*sn,b=x*sn+y*cs;const zWorld=-s*zscale; /* Z positive UP. Pumping s>0 => Z<0; negative Z appears below reference plane. *//* World Z positive UP; drawdown s>0 makes zWorld<0. Canvas Y positive DOWN, so -zWorld*ct lowers the plotted surface. */return [ww/2+panX+a*scale,hh*.56+panY+(b*st-zWorld*ct)*scale]};const faces=[];for(let j=0;j<grid-1;j++)for(let i=0;i<grid-1;i++){let x=-1000+i*L/(grid-1),y=-1000+j*L/(grid-1),dd=L/(grid-1),s=(vals[j][i]+vals[j][i+1]+vals[j+1][i]+vals[j+1][i+1])/4;let p=[project(x,y,vals[j][i]),project(x+dd,y,vals[j][i+1]),project(x+dd,y+dd,vals[j+1][i+1]),project(x,y+dd,vals[j+1][i])];faces.push({p,s,depth:(x+dd/2)*sn+(y+dd/2)*cs})}faces.sort((a,b)=>a.depth-b.depth);for(const f of faces){ctx.beginPath();ctx.moveTo(...f.p[0]);for(let i=1;i<4;i++)ctx.lineTo(...f.p[i]);ctx.closePath();ctx.fillStyle=color(max?f.s/max:0);ctx.fill()}ctx.strokeStyle='rgba(240,249,255,.24)';ctx.lineWidth=.8;for(let j=0;j<grid;j+=4){ctx.beginPath();for(let i=0;i<grid;i++){let p=project(-1000+i*L/(grid-1),-1000+j*L/(grid-1),vals[j][i]);i?ctx.lineTo(...p):ctx.moveTo(...p)}ctx.stroke()}for(let i=0;i<grid;i+=4){ctx.beginPath();for(let j=0;j<grid;j++){let p=project(-1000+i*L/(grid-1),-1000+j*L/(grid-1),vals[j][i]);j?ctx.lineTo(...p):ctx.moveTo(...p)}ctx.stroke()}const corners=[[-1000,-1000],[1000,-1000],[1000,1000],[-1000,1000]].map(([x,y])=>project(x,y,0));ctx.beginPath();corners.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.strokeStyle='#9dbbd8';ctx.lineWidth=1.5;ctx.stroke();ctx.font='12px Aptos, sans-serif';ctx.fillStyle='#d4e4f6';ctx.fillText('X: 0–2,000 m',...project(0,-1160,0));ctx.fillText('Y: 0–2,000 m',...project(-1160,0,0));for(let i=0;i<W.length;i++){let w=W[i],s=drawAt(w.x,w.y,time),[px,py]=project(w.x,w.y,s);ctx.beginPath();ctx.arc(px,py,7,0,Math.PI*2);ctx.fillStyle=w.color;ctx.fill();ctx.strokeStyle='#06101d';ctx.lineWidth=2;ctx.stroke();ctx.font='bold 13px Aptos, sans-serif';ctx.fillStyle='#fff';ctx.fillText('W'+(i+1),px+10,py-7)}// Model-attached XYZ axes: same projection, rotation, tilt, zoom and pan as the surface.
+// Z denotes increasing hydraulic head (upward); the plotted depression is negative Z.
+{
+ const origin=project(-1000,-1000,0),length=360; // southwest reference-plane corner is local (0,0,0); base axes increase positively to 2000 m
+ const axes=[
+  {name:'X',point:project(-1000+length,-1000,0),color:MODEL1_COLORS.axisX},
+  {name:'Y',point:project(-1000,-1000+length,0),color:MODEL1_COLORS.axisY},
+  {name:'Z',point:project(-1000,-1000,-length/verticalExaggeration),color:MODEL1_COLORS.axisZ} // s<0 here yields Z>0 and a visibly UPWARD arrow
+ ];
+ ctx.save();ctx.lineWidth=2.7;ctx.font='bold 14px Aptos, sans-serif';
+ for(const axis of axes){const [ax,ay]=axis.point,[ox,oy]=origin,angle=Math.atan2(ay-oy,ax-ox),head=9;
+   ctx.strokeStyle=axis.color;ctx.fillStyle=axis.color;ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(ax,ay);ctx.stroke();
+   ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax-head*Math.cos(angle-.48),ay-head*Math.sin(angle-.48));ctx.lineTo(ax-head*Math.cos(angle+.48),ay-head*Math.sin(angle+.48));ctx.closePath();ctx.fill();
+   ctx.fillText(axis.name,ax+9,ay-7);
+ }
+ ctx.fillStyle='#FFFFFF';ctx.font='bold 11px Aptos, sans-serif';ctx.fillText('0,0,0',origin[0]-28,origin[1]+16);
+ // Horizontal local-coordinate values are nonnegative; positive Z (head elevation) is UP.
+ ctx.font='10px Aptos, sans-serif';ctx.fillText('X +',axes[0].point[0]+10,axes[0].point[1]+11);ctx.fillText('Y +',axes[1].point[0]+10,axes[1].point[1]+11);
+ ctx.restore();
+}
+ctx.fillStyle='#b5c7db';ctx.font='12px Aptos, sans-serif';ctx.fillText('Drawdown depression: Z = -s(x, y, t), reference plane Z = 0',15,22);ctx.fillText('Vertical exaggeration: '+verticalExaggeration+'×',15,40);drawPlan();drawSection();const yg=document.querySelector('.y-graph');if(yg&&planRect){const ypanel=document.querySelector('.y-layout');const available=ypanel.clientWidth;const target=Math.min(planRect.side+74,Math.max(125,available*.64));if(Math.abs(yg.getBoundingClientRect().width-target)>1){yg.style.flexBasis=target+'px';yg.style.width=target+'px'}}drawSectionY()}
+function slider(id,fn){$(id).addEventListener('input',e=>{fn(+e.target.value);dirty=true;render()})}function wellControls(){const host=$('wells');host.innerHTML='';W.forEach((w,i)=>{let d=document.createElement('div');d.className='section';d.innerHTML=`<div class="well-head"><h2><span class="well-dot" style="background:${w.color}"></span>Extraction well ${i+1}</h2><button class="well-remove" data-remove-well="${i}" ${W.length<=1?'disabled title="At least one well is required"':''}>Remove</button></div><div class="well-xy"><label>X (m) <input type="number" id="wx${i}" min="0" max="2000" step="1" value="${Math.round(w.x+1000)}"></label><label>Y (m) <input type="number" id="wy${i}" min="0" max="2000" step="1" value="${Math.round(w.y+1000)}"></label></div><div class="control"><div class="top"><label data-help="Constant groundwater extraction rate, m³/day." tabindex="0">Pumping rate ⓘ</label><output id="q${i}v"></output></div><input id="q${i}" type="range" min="0" max="2000" step="25" value="${w.q}"></div><div class="pair"><div class="control"><div class="top"><label data-help="Day when pumping begins." tabindex="0">Start day ⓘ</label><output id="start${i}v"></output></div><input id="start${i}" type="range" min="0" max="${Math.max(0,duration-1)}" step="1" value="${w.start}"></div><div class="control"><div class="top"><label data-help="Day when pumping ends; recovery continues afterwards." tabindex="0">Stop day ⓘ</label><output id="stop${i}v"></output></div><input id="stop${i}" type="range" min="1" max="${duration}" step="1" value="${w.stop}"></div></div>`;host.appendChild(d);for(const axis of ['x','y']){const el=$(`w${axis}${i}`);el.addEventListener('change',()=>{w[axis]=Math.round(Math.max(0,Math.min(2000,Number(el.value)||0))-1000);el.value=w[axis]+1000;invalidateAndRefresh()})}d.querySelector('[data-remove-well]').addEventListener('click',()=>{if(W.length<=1)return;W.splice(i,1);W.forEach((v,j)=>v.color=wellColors[j]);invalidateAndRefresh(true)});let sync=()=>{$(`q${i}v`).textContent=w.q.toLocaleString()+' m³/d';$(`start${i}v`).textContent=w.start+' d';$(`stop${i}v`).textContent=w.stop+' d';$(`start${i}`).min=0;$(`start${i}`).max=Math.max(0,duration-1);$(`stop${i}`).min=1;$(`stop${i}`).max=duration;$(`start${i}`).value=w.start;$(`stop${i}`).value=w.stop};sync();slider('q'+i,v=>{w.q=v;sync()});slider('start'+i,v=>{w.start=Math.max(0,Math.min(v,w.stop-1,duration-1));sync()});slider('stop'+i,v=>{w.stop=Math.min(duration,Math.max(v,w.start+1));sync()})})}
+function setDuration(v){duration=Math.max(1,Math.min(1000,Math.round(v)));for(const w of W){w.stop=Math.max(1,Math.min(duration,w.stop));w.start=Math.max(0,Math.min(w.start,w.stop-1,duration-1));}$('duration').value=duration;$('durationVal').textContent=duration.toLocaleString()+' days';$('durationLabel').textContent='0–'+duration.toLocaleString()+' days';$('time').max=duration;if(time>duration)time=duration;$('time').value=time;wellControls();dirty=true;render()}$('duration').addEventListener('input',e=>setDuration(+e.target.value));function updateParams(){$('Tval').textContent=T.toLocaleString()+' m²/d';$('Sval').textContent=S.toFixed(5);$('Hval').textContent=H+' m'}$('ve').addEventListener('input',e=>{verticalExaggeration=Number(e.target.value);$('veval').textContent=verticalExaggeration+'×';render()});slider('T',v=>{T=v;updateParams()});slider('S',v=>{S=v;updateParams()});slider('H',v=>{H=v;updateParams()});slider('time',v=>{time=v;render()});$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Ⅱ Pause':'▶ Play';last=0;requestAnimationFrame(tick)};function tick(now){if(!playing)return;if(last){time+=Math.min(.12,(now-last)/1000)*12;if(time>=duration){time=duration;playing=false;$('play').textContent='▶ Play'}$('time').value=time;dirty=true;render()}last=now;if(playing)requestAnimationFrame(tick)}$('resetTime').onclick=()=>{time=0;$('time').value=0;dirty=true;render()};$('preset').onclick=()=>{W.splice(0,W.length,...DEFAULT_W.map(w=>({...w,stop:Math.min(duration,w.stop),start:Math.min(w.start,Math.max(0,Math.min(duration,w.stop)-1))})));P.splice(0,P.length,{x:0,y:0});activeP=0;syncP();renderPiezometerControls();mapAction=null;time=Math.min(35,duration);$('time').value=time;invalidateAndRefresh(true)};$('resetView').onclick=()=>{autoRotating=false;updateRotationButton();rot=-.62;tilt=.72;zoom=1;panX=0;panY=0;render()};function updateRotationButton(){const b=$('autoRotate');b.classList.toggle('selected',autoRotating);b.setAttribute('aria-pressed',String(autoRotating));b.textContent=autoRotating?'■ Stop 360°':'360°'}
+$('autoRotate').onclick=()=>{autoRotating=!autoRotating;updateRotationButton();rotationLast=0;if(autoRotating)requestAnimationFrame(rotateFrame)};
+$('rotationSpeed').addEventListener('input',e=>{rotationSpeed=Number(e.target.value);$('rotationSpeedVal').textContent=rotationSpeed+'°/s'});
+let rotationLast=0;
+function rotateFrame(ts){if(!autoRotating)return;if(rotationLast){rot+=((ts-rotationLast)/1000)*rotationSpeed*Math.PI/180;rot%=Math.PI*2;render()}rotationLast=ts;requestAnimationFrame(rotateFrame)}
+let down=false,dragMode=null,px=0,py=0;
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('auxclick',e=>{if(e.button===1)e.preventDefault()});
+cv.addEventListener('pointerdown',e=>{
+ if(e.button!==0&&e.button!==1)return;
+ e.preventDefault();down=true;dragMode=e.button===1?'pan':'rotate';px=e.clientX;py=e.clientY;
+ cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove',e=>{
+ if(!down)return;
+ const dx=e.clientX-px,dy=e.clientY-py;
+ if(dragMode==='pan'){panX+=dx;panY+=dy}
+ else{rot+=dx*.008;tilt=Math.max(.12,Math.min(1.45,tilt+dy*.006))}
+ px=e.clientX;py=e.clientY;render();
+});
+cv.addEventListener('pointerup',()=>{down=false;dragMode=null});
+cv.addEventListener('pointercancel',()=>{down=false;dragMode=null});
+cv.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.35,Math.min(3.2,zoom*Math.exp(-e.deltaY*.001)));render()},{passive:false});
+cv.addEventListener('dblclick',()=>{$('resetView').click()});
+let draggingPoint=null;function mapPointer(e){if(!planRect)return null;const rect=planCv.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top;return {x,y,wx:Math.round(Math.max(-1000,Math.min(1000,(x-planRect.left)/planRect.side*2000-1000))),wy:Math.round(Math.max(-1000,Math.min(1000,1000-(y-planRect.top)/planRect.side*2000)))}}function nearMapPoint(p,q,r=15){const dx=(p.wx-q.x)/2000*planRect.side,dy=(p.wy-q.y)/2000*planRect.side;return Math.hypot(dx,dy)<r}
+planCv.addEventListener('pointerdown',e=>{const p=mapPointer(e);if(!p)return;
+if(mapAction==='well'){if(W.length<5){const i=W.length;W.push({x:p.wx,y:p.wy,q:500,start:0,stop:Math.max(1,Math.min(duration,75)),color:wellColors[i]});mapAction=null;invalidateAndRefresh(true)}return}
+if(mapAction==='piezometer'){if(P.length>=3){mapAction=null;updateMapActions();return;}P.push({x:p.wx,y:p.wy});activeP=P.length-1;syncP();renderPiezometerControls();mapAction=null;invalidateAndRefresh();return}
+let wi=W.findIndex(w=>nearMapPoint(p,w));if(wi>=0){draggingPoint={type:'well',index:wi};planCv.setPointerCapture(e.pointerId);return}
+let pi=P.findIndex(q=>nearMapPoint(p,q));if(pi>=0){activeP=pi;syncP();renderPiezometerControls();draggingPoint={type:'piezometer',index:pi};planCv.setPointerCapture(e.pointerId);dirty=true;render();return}
+// Click on open map moves selected piezometer and both section cuts.
+P[activeP].x=p.wx;P[activeP].y=p.wy;syncP();dirty=true;render();});
+planCv.addEventListener('pointermove',e=>{const p=mapPointer(e);if(!p)return;if(!draggingPoint){planCv.style.cursor=W.some(w=>nearMapPoint(p,w))||P.some(q=>nearMapPoint(p,q))?'grab':'crosshair';return}const item=draggingPoint.type==='well'?W[draggingPoint.index]:P[draggingPoint.index];if(!item)return;item.x=p.wx;item.y=p.wy;if(draggingPoint.type==='piezometer'){activeP=draggingPoint.index;syncP()}else{const wx=$(`wx${draggingPoint.index}`),wy=$(`wy${draggingPoint.index}`);if(wx)wx.value=item.x+1000;if(wy)wy.value=item.y+1000}dirty=true;render()});
+function endMapDrag(){draggingPoint=null;planCv.style.cursor='crosshair'}planCv.addEventListener('pointerup',endMapDrag);planCv.addEventListener('pointercancel',endMapDrag);
+$('wellSummaryBody').addEventListener('click',e=>{const tr=e.target.closest('[data-pindex]');if(!tr)return;activeP=Number(tr.dataset.pindex);syncP();renderPiezometerControls();dirty=true;render()});
+
+// Browser-native, sequential canvas video export. All frames are drawn from the actual Theis model.
+let exportCancel=false,exportBusy=false;
+const exportTitles={plan:'Top View · Piezometric Contours',y:'Y–Y′ Piezometric Cross-Section',x:'X–X′ Piezometric Cross-Section','3d':'3D Groundwater Drawdown Surface',all:'Four-View Groundwater Dashboard'};
+const exportFiles={plan:'Model1_TopView.webm',y:'Model1_Section_Y.webm',x:'Model1_Section_X.webm','3d':'Model1_3D.webm',all:'Model1_Dashboard.webm'};
+const exportSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function exportText(c,str,x,y,size=24,color='#edf6ff',weight='normal'){c.fillStyle=color;c.font=weight+' '+size+'px Aptos, sans-serif';c.fillText(str,x,y)}
+function exportCreatorCredit(c,w,h){
+ const k=w/1920, label='created by Dr Yiannis Kontos';
+ c.save();c.font=`500 ${Math.max(12,19*k)}px Aptos, sans-serif`;
+ const pad=13*k,boxW=c.measureText(label).width+pad*2,boxH=32*k;
+ const x=w-boxW-20*k,y=h-boxH-12*k;
+ c.fillStyle='rgba(9,19,32,.94)';c.fillRect(x,y,boxW,boxH);
+ c.strokeStyle='#52718c';c.lineWidth=Math.max(1,k);c.strokeRect(x,y,boxW,boxH);
+ c.fillStyle='#d5e8fa';c.fillText(label,x+pad,y+23*k);
+ c.restore();
+}
+function exportCover(c,w,h){c.fillStyle='#091320';c.fillRect(0,0,w,h);c.fillStyle='#152c44';c.fillRect(0,0,w,Math.round(h*.14));c.fillStyle='#42b8f2';c.fillRect(0,Math.round(h*.14)-5,w,5)}
+function exportIntro(c,w,h,kind){exportCover(c,w,h);const k=w/1920;exportText(c,'PlayGroundWater MODEL 1  |  TRANSIENT GROUNDWATER PUMPING',w*.07,h*.095,34*k,'#b9d7ed','bold');exportText(c,exportTitles[kind],w*.07,h*.245,53*k,'#ffffff','bold');exportText(c,'Theis analytical solution · Multi-well superposition',w*.07,h*.31,27*k,'#91c6e8');const left=w*.075,top=h*.41,lh=39*k;let lines=[`Domain: 2,000 × 2,000 m     Duration: ${duration} days`,`Transmissivity: ${T} m²/day     Storativity: ${S.toFixed(5)}`,`Initial hydraulic head: ${H} m     Well radial cutoff: 0.2 m`,...W.map((v,i)=>`W${i+1}: (${v.x+1000}, ${v.y+1000}) m   Q = ${v.q.toLocaleString()} m³/day   days ${v.start}–${v.stop}`),...P.map((v,i)=>`P${i+1}: (${v.x+1000}, ${v.y+1000}) m${i===activeP?' · section intersection':''}`)];if(kind==='x')lines.push(`Cross-section: y = ${Math.round(crossY+1000)} m`);if(kind==='y')lines.push(`Cross-section: x = ${Math.round(crossX+1000)} m`);if(kind==='3d'||kind==='all')lines.push(`3D vertical exaggeration: ${verticalExaggeration}×`);lines.forEach((line,i)=>exportText(c,line,left,top+i*lh,25*k,'#d8e8f5'));exportText(c,'SIMULATION INPUT PARAMETERS',left,top-28*k,21*k,'#66c8ff','bold');exportText(c,'Animation: day 0 → day '+duration,w*.075,h*.91,26*k,'#b7cfe3');exportCreatorCredit(c,w,h)}
+function exportFit(c,source,x,y,w,h){const sw=source.width,sh=source.height;if(!sw||!sh)return;const scale=Math.min(w/sw,h/sh);const rw=sw*scale,rh=sh*scale;c.drawImage(source,x+(w-rw)/2,y+(h-rh)/2,rw,rh)}
+function exportDrawdownLegend(c,x,y,w,k){
+  // Same six-stop palette as the dashboard's drawdown legend.
+  const stops=MODEL1_COLORS.drawdown;
+  const grad=c.createLinearGradient(x,y,x+w,y);
+  stops.forEach((color,i)=>grad.addColorStop(i/(stops.length-1),color));
+  c.save();
+  c.fillStyle='#d5e7f5';c.font=`${Math.round(20*k)}px Aptos, sans-serif`;
+  c.fillText('Drawdown (m)',x,y-12*k);
+  c.fillStyle=grad;c.fillRect(x,y,w,15*k);
+  c.strokeStyle='#8298ae';c.lineWidth=Math.max(1,k);c.strokeRect(x,y,w,15*k);
+  c.fillStyle='#d5e7f5';c.font=`${Math.round(17*k)}px Aptos, sans-serif`;
+  c.fillText('0',x,y+37*k);
+  const maximum=max.toFixed(2);
+  c.fillText(maximum,x+w-c.measureText(maximum).width,y+37*k);
+  c.restore();
+}
+function exportView(c,w,h,kind,day){exportCover(c,w,h);const k=w/1920,header=h*.125,footer=h*.09;exportText(c,'PlayGroundWater MODEL 1  ·  '+exportTitles[kind],w*.035,h*.071,32*k,'#f2f8ff','bold');const y=header+8,bodyH=h-header-footer-14;
+if(kind==='all'){
+ const gap=12*k,pad=20*k,cellW=(w-2*pad-gap)/2,cellH=(bodyH-gap)/2;
+ const cells=[['TOP VIEW · X–Y',planCv],['Y–Y′ SECTION',sectionYCv],['X–X′ SECTION',sectionCv],['3D DRAWDOWN DEPRESSION',cv]];
+ cells.forEach(([name,source],i)=>{
+   const xx=pad+(i%2)*(cellW+gap),yy=y+Math.floor(i/2)*(cellH+gap);
+   c.fillStyle='#11263c';c.fillRect(xx,yy,cellW,cellH);
+   exportText(c,name,xx+12*k,yy+23*k,20*k,'#c3e2f5','bold');
+   const plotX=xx+8*k,plotY=yy+31*k,plotW=cellW-16*k,plotH=cellH-39*k;
+   // Draw the same source canvases as the dashboard; the top map already
+   // contains the yellow X–X′ and blue Y–Y′ guide lines and their labels.
+   exportFit(c,source,plotX,plotY,i===1?plotW*.52:plotW,plotH);
+   // The top-view canvas already contains its vertical legend; do not duplicate a horizontal scale.
+   if(i===1){
+     // Recreate the on-screen well table in the upper-right dashboard panel.
+     const tableX=xx+cellW*.53,tableY=yy+45*k,tableW=cellW*.44;
+     c.fillStyle='rgba(11,26,43,.95)';c.fillRect(tableX,tableY,tableW,Math.min(cellH-60*k,(135+(W.length+P.length)*28)*k));
+     c.strokeStyle='#52718c';c.lineWidth=1*k;c.strokeRect(tableX,tableY,tableW,Math.min(cellH-60*k,(135+(W.length+P.length)*28)*k));
+     exportText(c,'LIVE Data',tableX+9*k,tableY+23*k,16*k,'#e3f2ff','bold');
+     exportText(c,'POINT   X   Y   Q   s   MAX s   DAY',tableX+9*k,tableY+47*k,11*k,'#a9cce6','bold');
+     const videoPeaks=wellPeaks(day);
+     W.forEach((well,wi)=>{
+       const rate=day>=well.start&&day<well.stop?well.q:0;
+       const ds=drawAt(well.x,well.y,day);
+       exportText(c,`W${wi+1}  ${well.x+1000}  ${well.y+1000}  ${rate}  ${ds.toFixed(2)}  ${videoPeaks[wi].value.toFixed(2)}  ${Number(videoPeaks[wi].day.toFixed(1))}`,tableX+9*k,tableY+(70+wi*26)*k,15*k,well.color);
+     });
+     P.forEach((p,pi)=>{const pPeak=peakAtPoint(p.x,p.y,day);exportText(c,`P${pi+1}  ${p.x+1000}  ${p.y+1000}  –  ${drawAt(p.x,p.y,day).toFixed(2)}  ${pPeak.value.toFixed(2)}  ${Number(pPeak.day.toFixed(1))}`,tableX+9*k,tableY+(70+(W.length+pi)*26)*k,15*k,'#6de2fa')});
+     const maxVideo=Math.max(...vals.flat()),minVideo=Math.min(...vals.flat());
+     const stY=tableY+(82+(W.length+P.length)*26)*k;
+     exportText(c,`EXTREMES   Max drawdown ${maxVideo.toFixed(2)} m   Max head ${(H-minVideo).toFixed(2)} m`,tableX+8*k,stY,12*k,'#bce6ff','bold');
+     exportText(c,`ACTIVITY   Q ${W.filter(w=>day>=w.start&&day<w.stop).reduce((a,w)=>a+w.q,0).toLocaleString()} m³/d   Wells ${W.filter(w=>day>=w.start&&day<w.stop).length}/${W.length}`,tableX+8*k,stY+23*k,12*k,'#bce6ff','bold');
+   }
+ });
+}
+else{let source=kind==='plan'?planCv:kind==='y'?sectionYCv:kind==='x'?sectionCv:cv;c.fillStyle='#102239';c.fillRect(w*.045,y,w*.91,bodyH);exportFit(c,source,w*.06,y+8,w*.88,bodyH-16);if(kind==='plan')exportDrawdownLegend(c,w*.64,y+bodyH-85*k,w*.25,k);if(kind==='3d'){c.fillStyle='rgba(8,19,32,.89)';c.fillRect(w*.735,y+15*k,w*.19,125*k);exportText(c,'CURRENT PUMPING',w*.75,y+41*k,21*k,'#fff','bold');W.forEach((v,i)=>exportText(c,`W${i+1}: ${time>=v.start&&time<v.stop?v.q:0} m³/day`,w*.75,y+(68+i*25)*k,20*k,v.color))}}
+c.fillStyle='#152c44';c.fillRect(0,h-footer,w,footer);exportText(c,`Day ${Math.round(day)} / ${duration}`,w*.035,h-footer*.36,31*k,'#ffffff','bold');exportText(c,`T = ${T} m²/d    S = ${S.toFixed(5)}    h₀ = ${H} m`,w*.32,h-footer*.36,22*k,'#c8deef');if(kind==='x')exportText(c,`y = ${Math.round(crossY+1000)} m`,w*.80,h-footer*.36,22*k,'#9ed8f9');if(kind==='y')exportText(c,`x = ${Math.round(crossX+1000)} m`,w*.80,h-footer*.36,22*k,'#9ed8f9');exportCreatorCredit(c,w,h)}
+async function exportOne(kind,seconds,width,index,total){const height=Math.round(width*9/16),fps=15,introSec=6,outroSec=3,canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;const c=canvas.getContext('2d',{alpha:false});if(!canvas.captureStream||!window.MediaRecorder)throw Error('Canvas video recording is not supported by this browser.');const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));if(!mime)throw Error('No supported WebM encoder found.');const stream=canvas.captureStream(fps),chunks=[];const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:width===1920?6500000:3500000});recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};const stopped=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=e=>reject(e.error||Error('Recorder error'))});recorder.start(1000);const originalTime=time,originalPlaying=playing;playing=false;$('play').textContent='▶ Play';const start=performance.now(),totalSec=introSec+seconds+outroSec;let lastFrame=-1;
+try{while(true){if(exportCancel)break;const elapsed=(performance.now()-start)/1000;if(elapsed>=totalSec)break;const frame=Math.floor(elapsed*fps);if(frame===lastFrame){await exportSleep(12);continue}lastFrame=frame;if(elapsed<introSec)exportIntro(c,width,height,kind);else{const progress=Math.min(1,(elapsed-introSec)/seconds);time=duration*progress;$('time').value=Math.round(time);dirty=true;render();exportView(c,width,height,kind,time)}$('exportProgress').value=100*((index+Math.min(1,elapsed/totalSec))/total);$('exportStatus').textContent=`Recording ${index+1}/${total}: ${exportTitles[kind]} · ${Math.floor(elapsed)} / ${Math.ceil(totalSec)} seconds`;await exportSleep(15)}
+}finally{recorder.stop();await stopped;stream.getTracks().forEach(track=>track.stop());time=originalTime;$('time').value=Math.round(time);dirty=true;render()}
+if(exportCancel)return null;const blob=new Blob(chunks,{type:mime});if(blob.size<1024)throw Error('The video encoder returned an empty recording.');return {name:exportFiles[kind],blob};}
+// Dependency-free ZIP (STORE) writer: no external libraries, works offline.
+const zipCrcTable=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+function zipCrc32(bytes){let c=0xffffffff;for(const b of bytes)c=zipCrcTable[(c^b)&255]^(c>>>8);return(c^0xffffffff)>>>0}
+function zipU16(d,o,v){d.setUint16(o,v,true)}
+function zipU32(d,o,v){d.setUint32(o,v>>>0,true)}
+async function zipVideos(files){
+  const encoder=new TextEncoder(),parts=[],central=[];let offset=0;
+  for(const file of files){
+    const name=encoder.encode(file.name),bytes=new Uint8Array(await file.blob.arrayBuffer());
+    const crc=zipCrc32(bytes),size=bytes.length;
+    if(size>0xffffffff||offset>0xffffffff)throw Error('Video export exceeds ZIP32 size limit. Export fewer or smaller videos.');
+    const local=new Uint8Array(30+name.length),ld=new DataView(local.buffer);
+    zipU32(ld,0,0x04034b50);zipU16(ld,4,20);zipU16(ld,8,0);zipU32(ld,14,crc);zipU32(ld,18,size);zipU32(ld,22,size);zipU16(ld,26,name.length);local.set(name,30);
+    parts.push(local,bytes);
+    const cent=new Uint8Array(46+name.length),cd=new DataView(cent.buffer);
+    zipU32(cd,0,0x02014b50);zipU16(cd,4,20);zipU16(cd,6,20);zipU32(cd,16,crc);zipU32(cd,20,size);zipU32(cd,24,size);zipU16(cd,28,name.length);zipU32(cd,42,offset);cent.set(name,46);central.push(cent);
+    offset+=local.length+size;
+  }
+  const centralLength=central.reduce((sum,a)=>sum+a.length,0),end=new Uint8Array(22),ed=new DataView(end.buffer);
+  zipU32(ed,0,0x06054b50);zipU16(ed,8,files.length);zipU16(ed,10,files.length);zipU32(ed,12,centralLength);zipU32(ed,16,offset);
+  return new Blob([...parts,...central,end],{type:'application/zip'});
+}
+function exportDownload(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),120000)}
+$('exportStart').addEventListener('click',async()=>{
+ if(exportBusy)return;
+ exportBusy=true;exportCancel=false;$('exportStart').disabled=true;$('exportCancel').disabled=false;$('exportProgress').value=0;
+ const seconds=+$('exportLength').value,width=+$('exportRes').value;
+ try{
+   const result=await exportOne('all',seconds,width,0,1);
+   if(exportCancel){$('exportStatus').textContent='Export cancelled.'}
+   else if(result){exportDownload(result.blob,'Model1_Full_Dashboard.webm');$('exportStatus').textContent='Dashboard video downloaded: Model1_Full_Dashboard.webm';$('exportProgress').value=100}
+ }catch(e){$('exportStatus').textContent='Export error: '+e.message;console.error(e)}
+ finally{exportBusy=false;$('exportStart').disabled=false;$('exportCancel').disabled=true}
+});
+$('exportCancel').addEventListener('click',()=>{exportCancel=true;$('exportStatus').textContent='Cancelling current recording…'});
+
+updateMapActions();new ResizeObserver(render).observe(cv);new ResizeObserver(render).observe(planCv);new ResizeObserver(render).observe(sectionCv);new ResizeObserver(render).observe(sectionYCv);updateParams();wellControls();renderPiezometerControls();render()})();
+</script><script>
+/* v11: Individual accessible explanations, kept entirely inside the browser viewport. */
+(()=>{
+ 'use strict';
+ const descriptions={
+  time:'Simulation day. Move the slider to inspect drawdown, well interference, and recovery at any time between day 0 and the selected endpoint.',
+  duration:'Total simulation horizon in days (1–1,000). Default: 120 days. The timeline and pumping schedules are constrained by the selected horizon.',
+  ve:'Vertical exaggeration of the 3D surface (1×–500×). Only 3D geometry changes; computed heads and cross-sections remain unchanged.',
+  T:'Aquifer transmissivity T (m²/day), equal to hydraulic conductivity multiplied by aquifer thickness. Controls the magnitude and spread of pumping drawdown.',
+  S:'Confined-aquifer storativity S (dimensionless). This slider has a linear scale. Controls the transient rate of hydraulic-head response.',
+  H:'Initial undisturbed hydraulic head h₀ (m). The simulated hydraulic head is h = h₀ − s.',
+  play:'Play or pause the groundwater simulation through the currently selected duration.',
+  resetTime:'Reset the simulation clock to day 0.',
+  preset:'Restore the featured default three-well pumping scenario.',
+  resetView:'Restore the original 3D camera rotation, tilt, zoom and pan position.',
+  exportLength:'Duration of the animated portion of each exported video, excluding the introduction and final hold.',
+  exportRes:'Output video resolution. Higher resolution requires more recording resources.',
+  exportStart:'Record and download one full-dashboard video with the current pumping-rate box and section guides.',
+  exportCancel:'Cancel the current video-export operation.',
+  maxdraw:'Largest computed drawdown on the model sampling grid (m), at the current simulation day.',
+  minhead:'Lowest computed hydraulic head on the model sampling grid (m), at the current simulation day.',
+  pump:'Combined instantaneous extraction rate of wells currently pumping (m³/day).',
+  active:'Number of wells actively pumping at the current simulation day.'
+ };
+ for(const [id,description] of Object.entries(descriptions)){
+  const control=document.getElementById(id);if(!control)continue;
+  let target=control;
+  if(control.matches('input,select')){
+   target=document.querySelector('label[for="'+id+'"]')||control.closest('.control,.export-row')?.querySelector('label')||control;
+  }
+  if(!target.hasAttribute('data-help'))target.setAttribute('data-help',description);
+  if(target!==control)control.setAttribute('data-help',description);
+ }
+ document.querySelectorAll('.stat').forEach(el=>{
+  const id=el.querySelector('b')?.id;if(id&&descriptions[id])el.setAttribute('data-help',descriptions[id]);
+ });
+ document.querySelectorAll('.export-choice').forEach(el=>{
+  const names={plan:'Top view: plan-view drawdown map and hydraulic-head contours.',y:'Y–Y′: hydraulic-head profile along Y at the selected X coordinate.',x:'X–X′: hydraulic-head profile along X at the selected Y coordinate.','3d':'3D: drawdown depression below the undisturbed head reference, Z = −s (not positive drawdown hills).',all:'Dashboard: all four synchronized views in one video.'};
+  el.closest('label')?.setAttribute('data-help',names[el.value]);
+ });
+ document.querySelectorAll('#wells .section').forEach((section,i)=>{
+  const head=section.querySelector('.well-head h2');if(head)head.setAttribute('data-help',`Well ${i+1}: independent groundwater extraction schedule and rate. Coordinates are shown alongside the well name.`);
+  for(const [prefix,description] of [['q','Constant groundwater extraction rate Q (m³/day) for this well.'],['start','Day on which this well begins pumping (0 to one day before the stop, within the simulation duration).'],['stop','Day on which this well stops pumping (no later than the simulation endpoint); residual drawdown then recovers gradually.']]){
+   const input=section.querySelector('#'+prefix+i);
+   if(input){input.setAttribute('data-help',description);const label=input.closest('.control')?.querySelector('label');if(label)label.setAttribute('data-help',description)}
+  }
+ });
+ const tooltip=document.createElement('div');tooltip.id='helpTooltip';tooltip.setAttribute('role','tooltip');document.body.appendChild(tooltip);
+ let active=null;
+ function position(e){if(!active)return;const r=active.getBoundingClientRect(),pad=10,gap=10;
+  tooltip.style.left='0px';tooltip.style.top='0px';
+  const tw=tooltip.offsetWidth,th=tooltip.offsetHeight;
+  let x=r.left,y=r.bottom+gap;
+  if(e&&e.type==='pointermove'&&e.pointerType!=='touch'){x=e.clientX+14;y=e.clientY+16}
+  x=Math.max(pad,Math.min(x,innerWidth-tw-pad));
+  if(y+th>innerHeight-pad)y=r.top-th-gap;
+  if(y<pad)y=Math.max(pad,innerHeight-th-pad);
+  tooltip.style.left=x+'px';tooltip.style.top=y+'px';
+ }
+ function show(el,e){const help=el.getAttribute('data-help');if(!help)return;active=el;tooltip.textContent=help;tooltip.classList.add('visible');position(e)}
+ function hide(){active=null;tooltip.classList.remove('visible')}
+ document.addEventListener('pointerover',e=>{const el=e.target.closest('[data-help]');if(el&&el!==active)show(el,e)});
+ document.addEventListener('pointermove',e=>{if(active&&e.pointerType!=='touch')position(e)});
+ document.addEventListener('pointerout',e=>{if(active&&!active.contains(e.relatedTarget))hide()});
+ document.addEventListener('focusin',e=>{const el=e.target.closest('[data-help]');if(el)show(el)});
+ document.addEventListener('focusout',e=>{if(active&&active===e.target)hide()});
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')hide()});
+ window.addEventListener('scroll',()=>{if(active)position()},true);
+ window.addEventListener('resize',()=>{if(active)position()});
+})();
+</script><a class="creator-credit" href="https://linktr.ee/ykontos" target="_blank" rel="noopener noreferrer" title="Open Dr Yiannis Kontos' profile">created by Dr Yiannis Kontos</a></body></html>
