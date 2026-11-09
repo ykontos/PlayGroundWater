@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width,initial-scale=1" name="viewport"/><title>PlayGroundWater Model 4 v1.59 | Groundwater Flow &amp; Transport</title><style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#182b3d;background:#eef3f7;font-size:13px}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit}button{background:white;border:1px solid #c6d4e0;border-radius:6px;padding:6px 10px;cursor:pointer;color:#20374c}button:hover{background:#e7f0fa}button.active{background:#176b9c;color:white;border-color:#176b9c}button:disabled{opacity:.45;cursor:not-allowed}input[type=range]{accent-color:#176b9c;width:100%;margin:3px 0}.app{height:100vh;min-height:660px;display:flex;flex-direction:column;padding:10px;gap:9px}.header{display:flex;align-items:center;justify-content:space-between;gap:12px}.header h1{font-size:18px;margin:0}.muted{color:#617486;font-size:11px}.workspace{flex:1;min-height:0;display:grid;grid-template-columns:minmax(400px,1.55fr) minmax(290px,.85fr) minmax(300px,1fr);gap:9px}.panel{background:#fff;border:1px solid #d5e0e9;border-radius:10px;padding:10px;min-height:0;min-width:0}.panel h2{font-size:13px;margin:0 0 8px}.map-panel{display:flex;flex-direction:column;min-height:0}.map-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden}.map-stage{height:100%;max-height:100%;width:100%;display:flex;align-items:center;justify-content:center;gap:6px}.map-stage canvas{display:block;aspect-ratio:1;width:auto;height:auto;max-height:100%;max-width:calc(100% - 76px);object-fit:contain;cursor:crosshair;touch-action:none;border:1px solid #a8b9c6}.scale{height:min(100%,700px);width:67px;flex:none}.toolbar{display:flex;gap:4px;overflow-x:auto;white-space:nowrap;padding:6px 0 2px;flex-shrink:0}.toolbar button{padding:5px 7px;font-size:11px}.legend{display:flex;align-items:center;gap:7px;padding-top:6px;flex-wrap:wrap;font-size:12px}.legend b{font-variant-numeric:tabular-nums}.middle,.right{display:flex;flex-direction:column;gap:9px;min-height:0;overflow-y:auto;scrollbar-width:thin}.middle>.panel,.right>.panel{flex-shrink:0}.controls{display:flex;gap:4px;align-items:center}.controls input{flex:1;min-width:0}.controls button{padding:5px 7px}.row{display:flex;justify-content:space-between;align-items:center;gap:8px}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}.metric{background:#f0f5f8;border-radius:6px;padding:8px}.metric strong{display:block;font-size:16px;font-variant-numeric:tabular-nums}.progress{height:4px;background:#e5edf2;border-radius:4px;margin-top:6px;overflow:hidden}.progress>div{background:#176b9c;height:100%;width:0}.chart{display:block;width:100%;height:200px}.well{display:grid;grid-template-columns:38px 1fr 72px 25px;align-items:center;gap:5px;margin:5px 0}.well button{padding:5px 3px}.well small{text-align:right;font-size:10px}.parameter{margin:5px 0 9px}.parameter label{display:flex;justify-content:space-between;gap:6px;font-size:12px}.parameter output{font-variant-numeric:tabular-nums;font-weight:600}.parameter input{display:block}.twocol{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}.balance{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.balance div{background:#f1f5f8;padding:6px;border-radius:5px}.balance strong{display:block;font-variant-numeric:tabular-nums;font-size:12px}.footer{font-size:10px;color:#617486}.red{color:#d3223a}@media(max-width:1100px){.app{height:auto;min-height:100vh}.workspace{grid-template-columns:minmax(360px,1.2fr) minmax(280px,1fr)}.right{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;overflow:visible}.map-wrap{min-height:480px}.map-stage canvas{max-height:75vh}.middle{overflow:visible}}@media(max-width:690px){.workspace{display:flex;flex-direction:column}.map-wrap{min-height:320px;height:65vh}.right{display:flex}.app{padding:7px}.header h1{font-size:15px}.map-stage canvas{max-height:100%}}
+.leak-modes{display:inline-flex;gap:3px;padding:3px;background:#e8eff5;border-radius:8px;border:1px solid #cbd9e4;flex-shrink:0}.leak-modes button{padding:6px 9px;font-weight:650;font-size:11px;border:1px solid transparent;background:transparent;color:#4b6073;border-radius:5px}.leak-modes button.selected{background:#176b9c;border-color:#176b9c;color:white;box-shadow:0 1px 3px #0002}.leak-modes button:not(.selected):hover{background:#d2e2ee}.leak-modes button:focus-visible{outline:2px solid #ec7a36;outline-offset:2px}@media(max-width:1250px){.leak-modes button{padding:5px 6px;font-size:10px}}
+
+.header-actions{display:flex;gap:6px;align-items:center}.monitor-row{display:grid;grid-template-columns:35px 1fr 64px 24px;align-items:center;gap:5px;margin:6px 0}.monitor-row small{font-size:10px}.monitor-row button{padding:5px 3px}.parameter select{width:100%;max-width:100%;padding:5px;border:1px solid #c6d4e0;border-radius:5px}.chart{height:175px}.source-marker-label{font-weight:bold} .map-panel .toolbar{flex-wrap:nowrap}
+body.dark{background:#091320;color:#e9f1fb}body.dark .app{background:#091320}body.dark .panel{background:#111f31;border-color:#35506a}body.dark .metric,body.dark .balance div{background:#1b3349;color:#eff6ff}body.dark .muted,body.dark .footer{color:#a9bed0}body.dark button,body.dark select{background:#1a3046;border-color:#47647a;color:#edf6ff}body.dark button.active,body.dark .leak-modes button.selected{background:#176b9c;color:white}body.dark .leak-modes{background:#1b3045;border-color:#3a5369}body.dark .leak-modes button:not(.selected){color:#c3d3e3;background:transparent}body.dark .leak-modes button:not(.selected):hover{background:#29445d}body.dark .metric strong{color:#fff}body.dark #gridWarning{color:#bbcad9}
+
+:root{font-family:Aptos,"Aptos Display",Arial,sans-serif;font-size:12px}
+*,button,input,select,table,svg text{font-family:Aptos,"Aptos Display",Arial,sans-serif!important}
+.panel{position:relative}.info-btn{position:absolute;right:8px;top:7px;width:16px;height:16px;min-width:16px;min-height:16px;max-width:16px;max-height:16px;border-radius:50%;padding:0;display:grid;place-items:center;font-size:11px;font-weight:800;line-height:1;color:#176b9c;background:#e5f0f8;border:1px solid #8aaec8;z-index:6}
+.panel h2{padding-right:22px;font-size:12px}.column-title{font-weight:800;font-size:13px;border-bottom:1px solid #bdd0df;padding:3px 7px 6px;color:#176b9c;flex:none}
+.map-actions{display:flex;gap:4px;margin-left:auto;margin-right:22px}.map-actions button{font-size:10px;padding:4px 6px}
+.map-panel>.row:first-child{flex-wrap:wrap;gap:4px}.map-panel .toolbar-add{font-size:11px;align-self:center;margin-right:2px;color:#176b9c}
+.live-scroll{max-height:190px;overflow:auto}.live-table{width:100%;border-collapse:collapse;font-size:10px;white-space:nowrap}.live-table th{position:sticky;top:0;background:#dbe7f2;color:#1d3d58;padding:5px 3px}.live-table td{border-bottom:1px solid #cedde7;padding:4px 3px;text-align:right}.live-table td:first-child,.live-table th:first-child{text-align:left}.live-table tr.source-divider td{background:#cfddea;font-weight:bold}
+.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 7px}.export-res{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px}.export-res label{width:100%}.export-res select{max-width:123px;width:123px;flex:none}.export-res button{width:auto;white-space:nowrap}.source-list{display:grid;gap:3px;margin-top:6px}.source-item{display:grid;grid-template-columns:42px 1fr 1fr 23px;align-items:center;gap:5px}.source-item input{width:100%;min-width:0}.source-item label{font-size:10px}.source-item button{padding:3px}
+.source-columns{display:grid;grid-template-columns:42px 1fr 1fr 23px;align-items:center;gap:5px;margin:5px 0 2px;padding:0 1px;color:var(--muted,#8dacbf);font-size:10px;font-weight:700}.source-columns span:nth-child(2),.source-columns span:nth-child(3){text-align:center}.source-columns span{line-height:1.2}
+.middle>.panel,.right>.panel{flex-shrink:0}.middle{overflow-y:auto}.middle>.panel:first-of-type{position:sticky;top:0;z-index:9;box-shadow:0 2px 8px #0002}
+.dark .column-title,.dark .toolbar-add{color:#98d2f5}.dark .info-btn{background:#234763;color:#e4f4ff;border-color:#5584a8}.dark .live-table th{background:#213c56;color:#f1f7ff}.dark .live-table td{border-color:#29445e;color:#e9f4ff}.dark .live-table tr.source-divider td{background:#23455f;color:#fff}
+.dark #ticks text{fill:#f8fbff}.dark #ticks line{stroke:#fff}.dark .scale text{fill:#fff}
+.tooltip-float{position:fixed;z-index:99999;max-width:min(310px,85vw);padding:9px 11px;border-radius:7px;background:#14273d;color:#fff;font-size:11px;box-shadow:0 4px 18px #0006;pointer-events:none;line-height:1.4;display:none}
+
+.dark svg#scale #ticks text {fill:#fff!important;stroke:none!important}
+.dark svg#scale #ticks line {stroke:#fff!important}
+@media(min-width:1250px){.workspace{grid-template-columns:minmax(430px,1.55fr) minmax(340px,.88fr) minmax(350px,1fr)}.middle>.panel:first-of-type{scroll-margin-top:0}}
+.live-table td:first-child{font-weight:bold}
+.map-stage canvas{touch-action:none}
+
+/* v1.18: geometry, sticky simulation header, compact source table, and safely placed i controls */
+:root {font-family:Aptos,"Aptos Display",Arial,sans-serif}
+.app{gap:5px;padding:7px 8px}
+.header{min-height:29px;gap:8px}
+.header h1{font-size:16px;line-height:1.1}
+.header .muted{font-size:10px;line-height:1.05}
+.workspace{gap:8px;position:relative;overflow:visible}
+/* Titles float in the header-to-dashboard gap instead of taking chart height */
+.middle,.right{position:relative;min-height:0;gap:0}
+.middle{overflow:visible;display:flex;flex-direction:column}
+.right{overflow-y:auto;overflow-x:visible;display:flex;flex-direction:column;gap:8px}
+.column-title{position:absolute;left:4px;top:-19px;height:17px;padding:0;line-height:16px;font-size:12px;border:0;white-space:nowrap;z-index:12;pointer-events:none}
+.timeline-fixed{position:relative;flex:none;z-index:10;margin:0 0 8px}
+.timeline-fixed>.panel{width:100%;box-shadow:0 2px 6px #0002}
+.middle-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px;scrollbar-width:thin}
+.middle-scroll>.panel{flex:none}
+.panel{padding:8px}
+.panel h2{font-size:12px;line-height:1.15;margin-bottom:6px;padding-right:20px}
+.info-btn{width:14px!important;height:14px!important;min-width:14px!important;max-width:14px!important;min-height:14px!important;max-height:14px!important;right:7px;top:7px;font-size:10px;line-height:12px}
+/* Leave room for the information control in any header carrying other controls */
+.header-row-safe,.right>.panel>.row:first-of-type{padding-right:21px;min-height:19px;gap:5px}
+.header-row-safe h2{padding-right:0;margin-bottom:3px}
+.right>.panel>.row:first-of-type .leak-modes{margin-right:0;min-width:0;gap:2px;padding:2px}
+.right>.panel>.row:first-of-type .leak-modes button{padding:4px 6px;font-size:10px;white-space:nowrap}
+/* Make selected monitoring coordinates stop before the top-right i */
+#monXY,.row .monXY,.chart-coordinate{max-width:calc(100% - 24px);padding-right:20px;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* More compact contaminate-source row/header and consistent font */
+.source-columns,.source-item{grid-template-columns:42px minmax(0,1fr) minmax(0,1fr) 23px;gap:4px}
+.source-columns{font-family:Aptos,"Aptos Display",Arial,sans-serif!important;font-size:10px;line-height:1.15;margin:3px 0 2px;padding:1px 0 2px}
+.source-columns span{font-size:10px;white-space:nowrap}
+.source-item{margin:0;min-height:21px}
+.source-item input{font-size:11px;padding:3px 4px;height:21px}
+.source-item button{height:21px;padding:2px}
+.source-list{gap:2px;margin-top:2px}
+/* Chart panel headings and their right-hand coordinate readouts never collide with info circles */
+.middle-scroll .panel>.row:first-of-type{padding-right:23px;min-width:0}
+.middle-scroll .panel>.row:first-of-type>.muted{max-width:46%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+@media(max-width:1100px){
+ .app{height:auto;min-height:100vh}
+ .column-title{position:static;height:18px;line-height:18px;padding-left:4px}
+ .middle{overflow:visible}
+ .timeline-fixed{position:sticky;top:0;z-index:15}
+ .middle-scroll{flex:none;overflow:visible}
+ .right{overflow:visible}
+}
+@media(max-width:690px){.middle,.right{display:flex}.right>.panel>.row:first-of-type .leak-modes button{padding:3px 4px}}
+
+/* v1.20 — Compact single-line mass balance and summary metrics. */
+.balance{gap:4px}
+.balance>div,.metrics>.metric{
+  display:flex;align-items:center;justify-content:space-between;gap:5px;
+  min-width:0;padding:5px 6px;min-height:27px;
+}
+.balance>div .muted,.metrics>.metric .muted{
+  font-family:Aptos,"Aptos Display",Arial,sans-serif;
+  font-size:10.5px;line-height:1.1;white-space:nowrap;
+}
+.balance>div strong,.metrics>.metric strong{
+  display:inline-block;flex:0 0 auto;font-family:Aptos,"Aptos Display",Arial,sans-serif;
+  font-size:12px;line-height:1.15;text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+.metrics{gap:4px;margin-top:5px}
+@media(max-width:1300px){.balance{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v1.22: source-specific schedules and visible right column heading */
+.right>.column-title.model-input-title{position:sticky!important;top:0!important;left:auto!important;height:19px!important;line-height:18px!important;display:block!important;flex:none!important;margin:0!important;padding:0 4px!important;background:var(--background,#091320);z-index:20!important;pointer-events:none!important;opacity:1!important;visibility:visible!important;color:inherit;font-family:Aptos,Arial,sans-serif;font-weight:700;font-size:12px}
+body:not(.dark) .right>.column-title.model-input-title{background:#eef3f7}
+body.dark .right>.column-title.model-input-title{background:#091320}
+.source-timing{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;padding:2px 4px 7px 45px;border-bottom:1px solid #586d804a;margin-bottom:4px;min-width:0}
+.source-time-field{display:flex;flex-direction:column;gap:1px;min-width:0;font:10px Aptos,Arial,sans-serif}
+.source-time-heading{display:flex;justify-content:space-between;align-items:center;gap:3px;white-space:nowrap}
+.source-time-heading output{font-weight:700;font-variant-numeric:tabular-nums}
+.source-time-field input[type=range]{width:100%;margin:1px 0 0}
+@media(max-width:1250px){.source-timing{padding-left:3px;gap:6px}}
+
+/* v1.23 – identical column title geometry; independently scrolling input panels */
+@media(min-width:1101px){
+ .middle,.right{position:relative;display:flex;flex-direction:column;min-height:0;overflow:visible;gap:0}
+ .middle>.column-title,.right>.column-title.model-input-title{
+  position:absolute!important;top:-19px!important;left:4px!important;
+  display:block!important;box-sizing:border-box!important;height:17px!important;
+  line-height:17px!important;padding:0!important;margin:0!important;
+  font-family:Aptos,"Aptos Display",Arial,sans-serif!important;
+  font-size:12px!important;font-weight:700!important;
+  color:var(--text,#182b3d)!important;background:transparent!important;
+  z-index:15!important;pointer-events:none!important;
+ }
+ .right-scroll{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+ .right-scroll>.panel{flex:0 0 auto}
+ .right-scroll>.panel>.row:first-of-type{padding-right:21px;min-height:19px;gap:5px}
+ .right-scroll>.panel>.row:first-of-type .leak-modes{min-width:0;gap:2px;padding:2px}
+ .right-scroll>.panel>.row:first-of-type .leak-modes button{padding:4px 6px;font-size:10px;white-space:nowrap}
+}
+@media(max-width:1100px){.right-scroll{display:flex;flex-direction:column;gap:8px}.right>.column-title.model-input-title{position:static!important;top:auto!important;background:transparent!important;height:18px!important;margin:0!important}}
+body.dark .right>.column-title.model-input-title{color:#98d2f5!important}
+body:not(.dark) .right>.column-title.model-input-title{color:#176b9c!important}
+
+/* v1.27: identical blue titles in both dashboard columns, including dark mode. */
+.middle>.column-title,.right>.column-title.model-input-title{
+ color:#176b9c!important;
+}
+body.dark .middle>.column-title,body.dark .right>.column-title.model-input-title{
+ color:#98d2f5!important;
+}
+/* Keep resolution, export and cancel buttons together in one compact row. */
+.video-grid .export-res{
+ display:flex;grid-column:1/-1;align-items:center;flex-wrap:nowrap;
+ gap:5px;min-width:0;
+}
+.video-grid .export-res>label{width:100%;flex:0 0 100%;}
+.video-grid .export-res>select{width:112px;max-width:112px;flex:0 0 112px;min-width:0;padding:4px 5px;font-size:11px;}
+.video-grid .export-res>button{flex:0 0 auto;padding:5px 7px;font-size:11px;white-space:nowrap;}
+.video-grid #videoLength{font-size:11px;}
+@media(max-width:440px){
+ .video-grid .export-res{gap:3px;}
+ .video-grid .export-res>select{width:105px;flex-basis:105px;}
+ .video-grid .export-res>button{padding:5px 4px;font-size:10px;}
+}
+
+.video-grid .export-res{display:grid;grid-template-columns:112px max-content max-content;column-gap:5px;row-gap:3px;justify-content:start;}
+.video-grid .export-res>label{grid-column:1/-1;width:auto;}
+.video-grid .export-res>select{grid-column:1;width:112px;}
+.video-grid .export-res>#exportVideo{grid-column:2;}
+.video-grid .export-res>#cancelVideo{grid-column:3;}
+
+/* v1.28: Make pumping rates as legible as primary model input values. */
+.well{grid-template-columns:38px minmax(55px,1fr) minmax(94px,auto) 25px}
+.well small{font-family:Aptos,"Aptos Display",Arial,sans-serif;font-size:12px;font-weight:700;color:var(--text,#182b3d);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right}
+
+
+.map-settings-row{display:flex;gap:9px;margin-top:8px;flex-wrap:wrap;align-items:stretch}.map-setting{min-width:0;flex:1 1 210px;border:1px solid var(--line,#ced8e2);border-radius:9px;padding:5px 8px 8px;margin:0}.map-setting legend{font-size:12px;font-weight:800;color:var(--text,#25425a);padding:0 5px}.map-setting-buttons{display:flex;gap:4px;flex-wrap:wrap}.map-setting-buttons button{font-family:inherit;font-size:11px;font-weight:700;border-radius:6px;border:1px solid #93a8b9;background:transparent;color:inherit;padding:5px 7px;cursor:pointer}.map-setting-buttons button.selected{background:#176b9c;color:#fff;border-color:#176b9c}.monitor-chart-stack{display:flex;flex-direction:column;gap:10px}.monitor-combined-canvas{display:block;width:100%;height:260px}.monitor-combined-legend{font-size:11px;display:flex;flex-wrap:wrap;gap:13px;margin-top:4px}.monitor-combined-legend span:before{content:'●';padding-right:5px}.monitor-combined-legend span:first-child:before{color:#b0299a}.monitor-combined-legend span:last-child:before{color:#2097c8}
+.monitor-series-toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap;font-size:11px;font-weight:500}
+.monitor-series-toggle input{width:14px;height:14px;accent-color:#2097c8;cursor:pointer}
+.monitor-series-dot{display:inline-block;width:9px;height:9px;border-radius:50%}.legacy-monitor-charts{position:absolute;left:-10000px;top:0;width:360px;height:0;overflow:hidden;visibility:hidden}body.dark .map-setting{border-color:#46617b}body.dark .map-setting legend{color:#b9defa}
+.flow-panel .metrics{margin-top:6px}.flow-panel .metric{min-width:0}.flow-panel .metric .muted{white-space:normal}
+#reportDialog .report-actions{display:flex;gap:12px;flex-wrap:wrap;margin:14px 0}#reportDialog .report-actions button{flex:1;min-width:165px;background:#176b9c;color:#fff;font-weight:700;padding:12px 10px}#reportDialogStatus{font-weight:600;color:var(--text,#173650)}
+
+#exportData{white-space:normal;overflow-wrap:anywhere;line-height:1.22;min-width:0;max-width:100%;height:auto;text-align:center}
+#dataExchangePanel button{min-width:0}
+</style><style>
+/* Model 4 v1.39 — layout and dark-mode legibility */
+/* The timeline occupies the top of column 1, followed by the map. */
+.workspace{align-items:stretch}
+.workspace>.timeline-fixed{grid-column:1;grid-row:1;min-width:0;margin:0;z-index:11}
+.workspace>.map-panel{grid-column:1;grid-row:2;min-width:0;min-height:0}
+.workspace>.middle{grid-column:2;grid-row:1 / span 2;min-height:0}
+.workspace>.right{grid-column:3;grid-row:1 / span 2;min-height:0}
+.workspace{grid-template-rows:auto minmax(0,1fr)}
+.workspace>.timeline-fixed .controls{min-width:0}
+.workspace>.timeline-fixed .controls input{min-width:0}
+/* Well panels share one row, starting at exactly the same vertical position. */
+.well-panels-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:stretch}
+.well-panels-row>.panel{min-width:0;min-height:150px}
+.well-panels-row>.panel>.row{align-items:flex-start;flex-wrap:wrap;padding-right:15px;gap:5px}
+.well-panels-row>.panel h2{font-size:12px;line-height:1.3;margin:0}
+.well-panels-row>.panel .well,.well-panels-row>.panel .monitor-row{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.well-panels-row>.panel .well input,.well-panels-row>.panel .monitor-row input{min-width:45px;flex:1}
+.well-panels-row>.panel .well small{color:var(--text,#182b3d);font-size:12px;font-weight:700}
+body.dark .well-panels-row .well small,body.dark .well small,body.dark #wells output,body.dark #wells input{color:#fff!important}
+/* Four export controls (view, time, resolution, export, cancel) in one continuous row. */
+.video-grid.video-single-line{display:flex!important;flex-wrap:nowrap!important;align-items:center;gap:3px;min-width:0;width:100%}
+.video-grid.video-single-line>select{min-width:0;flex:1 1 0;width:0;font-size:10px;padding:4px 2px}
+.video-grid.video-single-line>#videoType{flex-grow:1.5}
+.video-grid.video-single-line>#videoRes{flex-grow:1.5}
+.video-grid.video-single-line>button{flex:0 0 auto;width:auto;padding:4px 4px;font-size:10px;white-space:nowrap}
+@media(max-width:1100px){
+ .workspace{grid-template-rows:auto minmax(0,1fr) auto}
+ .workspace>.timeline-fixed{grid-column:1;grid-row:1}
+ .workspace>.map-panel{grid-column:1;grid-row:2}
+ .workspace>.middle{grid-column:2;grid-row:1 / span 2}
+ .workspace>.right{grid-column:1/-1;grid-row:3}
+}
+@media(max-width:690px){
+ .workspace{display:flex;flex-direction:column}
+ .workspace>.timeline-fixed{position:relative;top:auto}
+ .well-panels-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style><style>
+/* v1.44: maintain aquifer map dimensions and widen the results register */
+@media(min-width:1250px){.workspace{grid-template-columns:minmax(430px,1.55fr) minmax(420px,1.15fr) minmax(300px,.82fr)!important;gap:7px!important}.timeline-fixed{width:calc(100% - 42px);justify-self:start}}
+.map-panel .toolbar{justify-content:flex-start;gap:4px;flex-wrap:wrap}
+.map-panel>.info-btn{right:8px}
+.middle-scroll .live-panel{min-width:0}
+.live-panel .live-table{font-size:9px;white-space:normal;table-layout:fixed;min-width:0}
+.live-panel .live-table th,.live-panel .live-table td{padding:4px 2px;overflow-wrap:anywhere;line-height:1.15}
+.live-panel .live-table th:nth-child(1){width:13%}.live-panel .live-table th:nth-child(2),.live-panel .live-table th:nth-child(3){width:9%}
+.live-panel .live-table th:nth-child(4){width:14%}.live-panel .live-table th:nth-child(5){width:10%}.live-panel .live-table th:nth-child(6){width:12%}.live-panel .live-table th:nth-child(7){width:9%}.live-panel .live-table th:nth-child(8){width:24%}
+.variable-pump-button{margin-top:7px;font-weight:700}
+#pumpingSchedule{margin-top:8px;overflow-x:auto}#pumpingSchedule[hidden]{display:none!important}
+.schedule-table{border-collapse:collapse;width:100%;font-size:10px}
+.schedule-table th,.schedule-table td{border:1px solid var(--line,#b1c7d4);padding:3px;text-align:center}
+.schedule-table th{font-size:9px;white-space:normal}
+.schedule-table input{width:100%;min-width:44px;max-width:77px;padding:5px 2px;border-radius:4px;border:1px solid #8aa7bb;background:var(--card,#fff);color:var(--text,#112b40);font:700 11px Aptos,Arial,sans-serif}
+body.dark .schedule-table input{background:#233a50;color:#fff;border-color:#6d8ca6}
+#authorCredit{position:fixed;right:16px;bottom:6px;z-index:30;color:#1688c2;font:600 12px Aptos,Arial,sans-serif;text-decoration:none;background:var(--panel,#f4f9ff);padding:4px 9px;border-radius:5px}
+body.dark #authorCredit{color:#9ed9ff;background:#0b2032}
+#authorCredit:hover{text-decoration:underline}
+</style><style>
+#pumpingPeriodsPanel{margin-top:8px;min-width:0}
+#pumpingPeriodsPanel[hidden]{display:none!important}
+#pumpingPeriodsPanel .schedule-table{font-size:11px;table-layout:fixed;min-width:0}
+#pumpingPeriodsPanel .schedule-table th,#pumpingPeriodsPanel .schedule-table td{padding:6px 4px}
+#pumpingPeriodsPanel .schedule-table input{max-width:none;min-width:0;width:100%;box-sizing:border-box}
+#pumpingPeriodsPanel .schedule-table td:first-child{font-weight:700}
+</style><style>.period-count-control{margin:0 0 6px;font-size:12px}.period-count-control select{margin-left:7px;padding:3px 6px;border-radius:4px}</style><style>
+/* v1.45 Data interchange, chart export and variable pumping distinction */
+.data-io-buttons,.data-export-menu{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.data-io-buttons button{flex:1;white-space:nowrap;min-width:95px}
+.data-export-menu[hidden],.import-dialog[hidden]{display:none!important}
+.import-dialog{position:fixed;inset:0;background:rgba(0,0,0,.63);display:grid;place-items:center;z-index:5000;padding:18px}
+.import-box{width:min(510px,100%);padding:23px;background:var(--panel,#f7fbff);border:2px solid #4699d9;border-radius:12px;color:var(--text,#152838);box-shadow:0 8px 36px #0006}
+.import-actions{display:flex;gap:9px;flex-wrap:wrap}.import-actions button{flex:1;min-width:112px}
+#dataIOStatus{white-space:pre-line;overflow-wrap:anywhere}
+.variable-pump-button[aria-pressed="true"]{background:#087a48!important;color:#fff!important;border-color:#36e397!important;font-weight:800}
+.variable-pump-button[aria-pressed="false"]{background:transparent!important;color:var(--text,#182b3d)!important;border-color:var(--border,#8ca5ba)!important}
+.well input[type="range"]:disabled{opacity:.28;cursor:not-allowed;filter:grayscale(1)}
+.well small.variable-rate-locked{color:var(--text,#182b3d);opacity:.65}
+.diagram-export-tools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.diagram-export-tools select,.diagram-export-tools button{font-size:11px;padding:3px 6px}
+.diagram-export-tools button{font-weight:650}
+</style><style>
+/* v1.46 contrast, layout and information-icon clearance */
+body.dark #variablePumping.variable-pump-button[aria-pressed="true"],
+body.dark #variablePumping.variable-pump-button[aria-pressed="false"]{color:#fff!important;font-weight:800!important}
+body.dark #variablePumping.variable-pump-button[aria-pressed="true"]{background:#087a48!important;border:2px solid #51f3a6!important;box-shadow:0 0 0 1px #065c37!important}
+body.dark #variablePumping.variable-pump-button[aria-pressed="false"]{background:#25425c!important;border:1px solid #779bb7!important}
+#variablePumping.variable-pump-button{font-size:11px;line-height:1.3;padding:6px 8px;white-space:normal}
+.workspace>.timeline-fixed .panel>.row:first-of-type{padding-right:37px}
+.workspace>.timeline-fixed #dayLabel{margin-right:2px;white-space:nowrap;font-size:11px}
+.workspace>.timeline-fixed .info-btn{right:7px;top:7px}
+.map-panel .map-actions{margin-left:6px!important;margin-right:27px!important;flex-shrink:0}
+.map-panel>.row:first-child{justify-content:flex-start!important;gap:5px!important}
+.map-panel #gridMeta{font-size:10px}
+@media(min-width:1250px){
+.workspace{grid-template-columns:minmax(560px,1.39fr) minmax(445px,1.29fr) minmax(330px,.82fr)!important}
+.workspace>.timeline-fixed{width:100%!important}
+.map-panel .map-stage{width:100%;max-width:100%}
+}
+#importErrorDialog[hidden]{display:none!important}
+#importErrorDialog .import-box{border-color:#e67b73;max-width:580px}
+#importErrorDialog .import-error-title{color:#d84b40;margin-top:0}
+#importErrorDetail{white-space:pre-wrap;overflow-wrap:anywhere;max-height:38vh;overflow:auto;line-height:1.5}
+#importErrorClose{min-width:90px}
+</style></head><body><main class="app"><header class="header"><div><h1>PlayGroundWater Model 4 v1.59 · Groundwater flow &amp; contaminant transport</h1><div class="muted">Standalone full-browser dashboard · 1,000 × 1,000 m · configurable grid · 5 years</div></div><div class="header-actions"><button id="theme" title="Toggle light or dark appearance" type="button">☾ Dark mode</button><button id="reset">↻ Reset model</button></div></header><div class="workspace"><div class="timeline-fixed"><section class="panel"><button aria-label="About Simulation timeline" class="info-btn" data-tip="Scrub the 0–1,825 day simulation using the slider or step buttons. Play and select playback speed; Reset model restores defaults. Editing model inputs recomputes flow, transport, and monitoring results. An unfinished NPS polygon blocks simulation and export until closed or removed." type="button">i</button><div class="row"><h2>Simulation timeline</h2><strong id="dayLabel">Day 120</strong></div><div class="controls"><button id="first" title="Start">|◀</button><button id="back">−30d</button><input id="time" max="1825" min="0" step="5" type="range" value="120"/><button id="next">+30d</button><button class="active" disabled="" id="play">▶</button></div><div class="row"><span class="muted">0 · 1 · 2 · 3 · 4 · 5 years</span><select id="speed"><option value="25">25 d/s</option><option selected="" value="60">60 d/s</option><option value="150">150 d/s</option></select></div><div class="muted" id="status">Computing simulation…</div><div class="progress"><div id="progress"></div></div></section></div><section class="panel map-panel"><button aria-label="About Aquifer concentration (mg/L)" class="info-btn" data-tip="The 1,000 × 1,000 m domain shows simulated concentration (mg/L), true numerical cell boundaries, metre coordinates, and the regional-flow arrow. P1–P4 are green extraction circles with curved arrows; M1–M2 are blue diamonds; PS denotes point sources and NPS denotes polygons. Use map tools to add sources/wells, drag existing objects to relocate, and Deselect all to clear placement. Grid zoom: Full grid (default), Manual zoom (drag rectangle or mouse wheel, centered at the pointer), and Zoom to extents (fit objects). Color scale: Fixed (whole simulation maximum) or Dynamic (current-day maximum). Zoom changes only the display, not the solver domain." type="button">i</button><div class="row"><h2>Aquifer concentration (mg/L)</h2><span class="muted" style="font-weight:600"><span id="gridMeta">Domain: 1,000 × 1,000 m · Grid: 40 × 40 · Δx = Δy = 25 m</span></span><div class="map-actions"><button id="addMapWell" type="button">+ Add well</button><button id="addMapMonitor" type="button">+ Add monitor</button></div></div><div class="map-wrap"><div class="map-stage"><canvas height="800" id="map" width="800"></canvas><svg class="scale" id="scale" preserveaspectratio="none" viewbox="0 0 67 400"><defs><lineargradient id="bar" x1="0" x2="0" y1="1" y2="0"><stop offset="0%" stop-color="#e9f4ef"></stop><stop offset="25%" stop-color="#8bcac1"></stop><stop offset="50%" stop-color="#eed36b"></stop><stop offset="75%" stop-color="#eb8547"></stop><stop offset="100%" stop-color="#af2647"></stop></lineargradient></defs><rect fill="url(#bar)" height="372" stroke="#667d8a" stroke-width=".8" width="19" x="17" y="14"></rect><g fill="#33485a" font-size="11" id="ticks"></g><g id="pointer"><path d="M1 -7 L15 0 L1 7 Z" fill="#dc213b" stroke="#9e1026" stroke-width="1"></path><path d="M15 0 H38" stroke="#dc213b" stroke-width="2"></path></g></svg></div></div><div class="muted" style="text-align:center;font-size:11px;padding-top:3px">X/Y coordinates (m) · Numerical domain 1,000 × 1,000 m · <span id="cellCount">1,600</span> cells</div><div class="map-settings-row"><fieldset class="map-setting"><legend>Grid zoom</legend><div class="map-setting-buttons"><button class="selected" id="fullExtent" type="button">Full grid</button><button id="manualZoom" title="Drag a rectangle or use the mouse wheel over the map to zoom around the pointer" type="button">Manual zoom</button><button id="zoomExtents" title="Fit all source, pump and monitor locations" type="button">Zoom to extents</button></div></fieldset><fieldset class="map-setting"><legend>Color scale</legend><div class="map-setting-buttons"><button aria-pressed="true" class="selected" id="fixedScale" type="button">Fixed</button><button aria-pressed="false" id="currentScale" type="button">Dynamic</button></div></fieldset></div><div class="legend"><svg height="16" viewbox="0 0 23 16" width="23"><path d="M0 1 L14 8 L0 15 Z" fill="#dc213b"></path><path d="M14 8 H23" stroke="#dc213b" stroke-width="2"></path></svg><b>Max current Conc:</b><b id="maxConc">— mg/L</b><span class="muted" id="scaleNote">Calculating fixed scale…</span></div><nav aria-label="Map tools" class="toolbar"><strong class="toolbar-add">ADD</strong><button class="active" data-tool="source">Point source</button><button data-tool="polygon">Non-point source</button><button id="close">Close polygon</button><button id="undo">Undo</button><button data-tool="monitor">Monitoring well</button><button data-tool="well">Pumping well</button><button id="deselectAll" title="Clear active map selection and exit placement mode" type="button">Deselect all</button></nav><div class="muted" id="hint">Click Pumping well or Monitoring well, then click an empty map location to add. Deselect all exits placement mode. Drag existing objects to move them.</div></section><div class="middle"><div class="column-title">LIVE dashboard</div><div class="middle-scroll"><section class="panel"><button aria-label="About Contaminant mass balance (kg)" class="info-btn" data-tip="Injected mass is partitioned among currently stored, pumping-well extraction, boundary export, decay and numerical residual (kg). Hydraulic flow metrics are reported separately under Flow data. Mass balance refers to the complete numerical aquifer, regardless of map zoom." type="button">i</button><h2>Contaminant mass balance (kg)</h2><div class="balance"><div><span class="muted">Injected</span><strong id="in">—</strong></div><div><span class="muted">Stored</span><strong id="stored">—</strong></div><div><span class="muted">Extracted</span><strong id="extracted">—</strong></div><div><span class="muted">Boundary export</span><strong id="boundary">—</strong></div><div><span class="muted">Decayed</span><strong id="decayed">—</strong></div><div><span class="muted">Residual</span><strong id="residual">—</strong></div></div></section><section class="panel flow-panel"><button aria-label="About Flow data" class="info-btn" data-tip="Regional velocity is the aquifer seepage velocity K × hydraulic gradient / effective porosity, in m/day. Total pumping is the sum of extraction discharge rates Q from all currently configured pumping wells, in m³/day. These are hydraulic flow indicators, not contaminant mass fluxes." type="button">i</button><h2>Flow data</h2><div class="metrics"><div class="metric"><span class="muted">Regional velocity (m/day)</span><strong id="vel">—</strong></div><div class="metric"><span class="muted">Total pumping (m³/day)</span><strong id="pump">—</strong></div></div></section><section class="panel live-panel"><button aria-label="About LIVE DATA" class="info-btn" data-tip="Time-dependent well and source register: P = extraction wells (up to four), M = monitoring wells (up to two), PS = point sources, NPS = polygonal non-point sources (up to three sources combined). Concentrations correspond to the selected day; peak values and peak occurrence day use simulated history through that day. Cumulative contaminant mass: pumping wells show extracted mass (kg), and PS/NPS sources show injected mass (kg), each up to the displayed simulation day. Monitoring wells show –. Each monitor also has its own combined concentration and hydraulic-head chart." type="button">i</button><h2>LIVE DATA</h2><div class="live-scroll"><table class="live-table"><thead><tr><th>Object / Source</th><th>X (m)</th><th>Y (m)</th><th>Rate / Leak Q<br/>(m³/day)</th><th>C (mg/L)</th><th>Max C (mg/L)</th><th>At day</th><th>Extracted / Injected (kg)</th></tr></thead><tbody id="liveRows"></tbody></table></div><div class="muted" style="padding-top:5px">Source rows show assigned loading concentration. Non-point coordinates are polygon centroids; monitoring maxima are sampled over elapsed time. The final column gives cumulative extracted contaminant mass for pumps and cumulative injected contaminant mass for sources (kg), not pumped water volume.</div></section><div class="monitor-chart-stack" id="monitorCharts"></div><div aria-hidden="true" class="legacy-monitor-charts"><canvas class="chart" id="headChart"></canvas><canvas class="chart" id="chart"></canvas><span id="headXY"></span><span id="monXY"></span></div></div></div><aside class="right"><div class="column-title model-input-title">Model input data</div><div class="right-scroll"><section class="panel"><button aria-label="About Aquifer &amp; regional flow" class="info-btn" data-tip="Set hydraulic conductivity K, regional hydraulic gradient, direction θ (0° east, 90° north), confined aquifer thickness, effective porosity and storativity. The numerical flow model uses finite differences, regional boundaries and pumping sinks. Transport uses advection, approximate hydrodynamic dispersion, molecular diffusion and decay. Source Q is solute mass loading, not hydraulic recharge. Educational numerical approximation; not independently validated against MODFLOW/MT3DMS." type="button">i</button><h2>Aquifer &amp; regional flow</h2><div class="twocol" id="aquifer"></div><div class="muted">θ: 0° east · 90° north. Gradient 0 disables regional flow, not pumping-induced flow.</div></section><section class="panel"><button aria-label="About Contaminant source" class="info-btn" data-tip="Add PS point sources or NPS closed polygons (up to three total). Each source has independent leakage flow Q, concentration C, Start day and Duration. Finite leak stops after that duration; Continuous leak respects Start day but continues to model end. Point and polygon sources contribute additively, including overlapping footprints. Close each polygon with at least three vertices before running or exporting; use Undo to reverse the last editing action, or remove an unfinished polygon. Q is a mass-loading proxy, not groundwater recharge." type="button">i</button><div class="row"><h2>Contaminant source</h2><div aria-label="Leak duration mode" class="leak-modes" role="group"><button aria-pressed="true" class="selected" id="finiteMode" type="button">Finite leak</button><button aria-pressed="false" id="continuousMode" type="button">Continuous leak</button></div></div><div aria-label="Source table headings" class="source-columns"><span>Source</span><span>Leak Q (m³/d)</span><span>C (mg/L)</span><span aria-label="Remove"></span></div><div class="source-list" id="sourceList"></div></section><section class="panel"><button aria-label="About Grid resolution" class="info-btn" data-tip="Set the actual computation grid: 25 m = 40 × 40 cells (default), 10 m = 100 × 100 or experimental 5 m = 200 × 200. This changes numerical resolution and computation cost; unlike Grid zoom, it changes the solver grid. At finer resolution check numerical stability, transport mass balance and grid convergence." type="button">i</button><h2>Grid resolution</h2><div class="row"><label for="gridSize">Cell size (m)</label><select id="gridSize"><option value="25">25 m (40 × 40 · fast)</option><option value="10">10 m (100 × 100 · slower)</option><option value="5">5 m (200 × 200 · experimental / very slow)</option></select></div><div class="muted" id="gridWarning">Smaller cells increase detail but greatly increase 5-year compute time. Use 25 m for routine scenarios.</div></section><section class="panel"><button aria-label="About Transport properties" class="info-btn" data-tip="Longitudinal and transverse dispersivity (m), molecular diffusion (m²/day), and first-order decay (day⁻¹) govern the educational advection–dispersion–reaction approximation. Changing these inputs triggers a new simulation; interpretation should account for numerical discretization and stability." type="button">i</button><h2>Transport properties</h2><div class="twocol" id="transport"></div></section><div class="well-panels-row"><section class="panel"><button aria-label="About Monitoring wells (up to 2)" class="info-btn" data-tip="Add, move or remove up to two blue diamond monitoring wells, M1/M2. Positions can be changed in the map. Each active monitor has its own combined history diagram: concentration (mg/L) on the left Y axis and hydraulic head (m) on the right Y axis. Monitoring locations sample computed results rather than changing the flow solution." type="button">i</button><div class="row"><h2>Monitoring wells (up to 2)</h2><button id="addMonitor">+ Add M</button></div><div id="monitors"></div></section><section class="panel"><button aria-label="About Pumping wells (up to 4)" class="info-btn" data-tip="Add, relocate or remove up to four green pumping wells P1–P4. The extraction-circle icon has an external curved arrow; pumping rates are entered in m³/day in this panel. Wells alter the groundwater field and extract contaminated groundwater. Use the Pumping well map tool to add at an empty map location or drag an existing symbol to move it. Variable pumping enables five consecutive daily stress periods. Each pumping well can have a different discharge in each period, including zero for inactive periods. Rates alter the computed flow, transport, extraction and pumping histories." type="button">i</button><div class="row"><h2>Pumping wells (up to 4)</h2><button id="add">+ Add well</button></div><div id="wells"></div><button aria-pressed="false" class="variable-pump-button" id="variablePumping" type="button">Variable pumping</button></section></div><section class="panel" hidden="" id="pumpingPeriodsPanel"><h2>Variable pumping · Stress periods</h2><div hidden="" id="pumpingSchedule"></div></section><section class="panel"><button aria-label="About Export simulation video" class="info-btn" data-tip="Export WebM as Map only or Full dashboard, choose 30/60/120 s and 1280 × 720 or 1920 × 1080. Full dashboard export contains the aquifer map and a separate results/input-information column; monitoring charts remain on the interactive dashboard and are not included in the full-dashboard video. Export is blocked when an NPS polygon is unfinished. Each export begins with a 5-second introduction. Cancel stops an ongoing recording." type="button">i</button><div class="row"><h2>Export simulation video</h2><span class="muted">WebM · offline</span></div><div class="video-grid video-single-line"><select aria-label="View" id="videoType"><option value="full">Full dashboard</option><option value="map">Main simulation map</option></select><select aria-label="Time" id="videoLength"><option value="30">30 s</option><option selected="" value="60">60 s</option><option value="120">120 s</option></select><select aria-label="Size" id="videoRes"><option value="1280">1280 × 720</option><option value="1920">1920 × 1080</option></select><button id="exportVideo">Export WebM</button><button disabled="" id="cancelVideo">Cancel</button></div><div aria-live="polite" class="muted" id="videoStatus" role="status"></div></section><section class="panel" id="dataExchangePanel"><h2>Data exchange &amp; reports</h2><div class="data-io-buttons"><button id="importData" type="button">Import data</button><button id="exportInputs" type="button">Export inputs CSV</button><button id="exportData" type="button">Export data and results report</button></div><div class="import-dialog" id="reportDialog" hidden><div class="import-box" role="dialog" aria-modal="true" aria-labelledby="reportDialogTitle"><h3 id="reportDialogTitle">Export data and results report</h3><p>Select a report format. Reports contain all model inputs and final simulation results and require a complete five-year simulation.</p><div class="report-actions"><button type="button" id="reportPdfChoice">PDF report (with diagrams)</button><button type="button" id="reportExcelChoice">Excel (.xlsx)</button></div><p id="reportDialogStatus" role="status" style="white-space:pre-wrap"></p><button type="button" id="reportDialogClose">Close</button></div></div><div class="data-export-menu" id="dataExportMenu" hidden><button id="exportPdf" type="button">PDF report</button><button id="exportExcel" type="button">Excel (.xlsx)</button></div><div aria-live="polite" class="muted" id="dataIOStatus" role="status"></div><input accept=".csv,text/csv" hidden="" id="importDataFile" type="file"/><div class="import-dialog" hidden="" id="importDialog"><div aria-labelledby="importPromptTitle" aria-modal="true" class="import-box" role="dialog"><h2 id="importPromptTitle">Import model data</h2><p>Do you have a PlayGroundWater Model 4 data CSV file to upload?</p><div class="import-actions"><button id="importYes">YES — Upload CSV</button><button id="importNo">NO, give me a default filled CSV file</button><button id="importCancel">Cancel</button></div></div></div></section></div></aside></div><div class="footer"></div><a href="https://linktr.ee/ykontos" id="authorCredit" rel="noopener noreferrer" target="_blank">created by Dr Yiannis Kontos</a></main>
+<div class="import-dialog" id="importErrorDialog" hidden><div class="import-box" role="alertdialog" aria-modal="true" aria-labelledby="importErrorTitle" aria-describedby="importErrorDetail"><h2 id="importErrorTitle" class="import-error-title">CSV import failed</h2><p id="importErrorDetail"></p><p><strong>Your current model inputs have not been changed.</strong></p><button id="importErrorClose" type="button">OK</button></div></div><script>
+(()=>{'use strict';const $=id=>document.getElementById(id),END=1825;let DX=25,N=40,NN=1600;const defs={K:25,I:.002,A:25,B:25,N:.25,S:.001,Q:20,C:500,LeakStart:0,Duration:60,AL:15,AT:3,DM:.001,Decay:0};const spec=[['aquifer','K','Conductivity K (m/day)',1,100,1],['aquifer','I','Gradient i',0,.01,.0002],['aquifer','A','Direction θ (°)',0,360,5],['aquifer','B','Thickness b (m)',5,100,5],['aquifer','N','Effective porosity',.05,.4,.01],['aquifer','S','Storativity S',.0001,.01,.0001],['transport','AL','Long. dispersivity (m)',0,100,2],['transport','AT','Trans. dispersivity (m)',0,30,1],['transport','DM','Diffusion (m²/day)',.00001,.1,.00001],['transport','Decay','Decay (day⁻¹)',0,.05,.001]];let p={...defs},wells=[{x:650,y:590,q:450}],selected=0,tool='source',pendingPlacement=null,source={x:230,y:410},sources=[{type:'point',x:230,y:410,q:20,c:500,start:0,duration:60}],activeSource=0,dragTarget=null,monitors=[{x:500,y:535}],selectedMonitor=0,polygon=[],poly=false,closed=false,continuous=false,day=120,job=null,result=null,run=0,queueTimer=0,playing=false,raf=0,last=null,fixedMax=1,globalMax=0,scaleMode='fixed';const idx=(i,j)=>j*N+i,clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),cell=(x,y)=>idx(clamp(Math.floor(x/DX),0,N-1),clamp(Math.floor(y/DX),0,N-1));
+// Piecewise-constant extraction schedules, up to up to five consecutive stress periods.
+// Boundaries in days: 0 = start of first period, END = end of last period.
+let variablePumping=false,periodCount=2;
+let pumpingPeriods=[{end:365},{end:730},{end:1095},{end:1460},{end:END}];
+let pumpingRates=wells.map(w=>Array(5).fill(w.q));
+function normalizeRates(){
+ pumpingRates.length=wells.length;
+ wells.forEach((w,i)=>{if(!pumpingRates[i])pumpingRates[i]=[];
+  for(let j=0;j<5;j++)if(!Number.isFinite(pumpingRates[i][j]))pumpingRates[i][j]=w.q;
+  pumpingRates[i].length=5;
+ });
+}
+function ratesAt(t){
+ if(!variablePumping)return wells.map(w=>w.q);
+ const period=Math.min(periodCount-1,Math.max(0,pumpingPeriods.findIndex(v=>t<v.end)<0?periodCount-1:pumpingPeriods.findIndex(v=>t<v.end)));
+ return wells.map((w,i)=>Math.max(0,Number(pumpingRates[i]?.[period]??w.q)||0));
+}
+function setPumpingForDay(state,t){
+ const rates=ratesAt(t);state.pump.fill(0);
+ for(let i=0;i<wells.length;i++)state.pump[cell(wells[i].x,wells[i].y)]+=rates[i];
+ state.rates=rates;
+}
+function totalAt(t){return ratesAt(t).reduce((a,b)=>a+b,0)}
+function pumpingScheduleUI(){
+ const host=$('pumpingSchedule');if(!host)return;
+ $('variablePumping').classList.toggle('selected',variablePumping);$('variablePumping').textContent=(variablePumping?'☑ Variable pumping ON':'☐ Variable pumping OFF');
+ $('variablePumping').setAttribute('aria-pressed',String(variablePumping));
+ $('pumpingPeriodsPanel').hidden=!variablePumping;host.hidden=!variablePumping;if(!variablePumping)return;
+ normalizeRates();host.replaceChildren();
+ const periodControl=document.createElement('div');periodControl.className='period-count-control';const cap=document.createElement('label');cap.textContent='Stress periods (1–5): ';const select=document.createElement('select');select.setAttribute('aria-label','Number of stress periods');for(let n=1;n<=5;n++){const opt=document.createElement('option');opt.value=n;opt.textContent=n;opt.selected=n===periodCount;select.append(opt)}select.onchange=()=>{const before=editSnapshot();periodCount=+select.value;
+  // Rebalance all active boundaries if the previous last period ended at END
+  // or if changing the count otherwise leaves out-of-order periods.
+  const valid=Array.from({length:periodCount},(_,j)=>j===periodCount-1?END:pumpingPeriods[j].end)
+    .every((v,j,a)=>Number.isInteger(v)&&v>0&&v<=END&&(j===0||v>a[j-1]));
+  if(!valid){for(let j=0;j<periodCount;j++)pumpingPeriods[j].end=Math.round(END*(j+1)/periodCount);}
+  pumpingPeriods[periodCount-1].end=END;
+  recordEdit(before);pumpingScheduleUI();queue()};cap.append(select);periodControl.append(cap);host.append(periodControl);
+ const explain=document.createElement('p');explain.className='muted';explain.textContent='Consecutive stress periods (days). Set Q = 0 for an inactive well. The last period ends at day 1825.';host.append(explain);
+ const table=document.createElement('table');table.className='schedule-table';
+ const header=document.createElement('tr');['Period','Start (d)','End (d)',...wells.map((w,i)=>'P'+(i+1)+' Q (m³/d)')].forEach(x=>{let th=document.createElement('th');th.textContent=x;header.append(th)});table.append(header);
+ for(let j=0;j<periodCount;j++){
+  const tr=document.createElement('tr');const start=j===0?0:pumpingPeriods[j-1].end;
+  const label=document.createElement('td');label.textContent='SP'+(j+1);tr.append(label);
+  const sCell=document.createElement('td');sCell.textContent=start;tr.append(sCell);
+  const endCell=document.createElement('td');
+  if(j===periodCount-1){endCell.textContent=END}else{
+   const input=document.createElement('input');input.type='number';input.min=1;input.max=END-1;input.step=1;input.value=pumpingPeriods[j].end;
+   input.setAttribute('aria-label','End day of stress period '+(j+1));
+   input.addEventListener('change',()=>{
+    const before=editSnapshot();const v=Number(input.value);
+    const min=(j? pumpingPeriods[j-1].end:0)+1;
+    const max=pumpingPeriods[j+1].end-1;
+    if(!Number.isInteger(v)||v<min||v>max){input.value=pumpingPeriods[j].end;input.title='Choose a day between '+min+' and '+max;return}
+    pumpingPeriods[j].end=v;recordEdit(before);pumpingScheduleUI();queue();
+   });endCell.append(input);
+  }tr.append(endCell);
+  wells.forEach((w,i)=>{const td=document.createElement('td'),input=document.createElement('input');
+   input.type='number';input.min='0';input.max='3000';input.step='25';input.value=pumpingRates[i][j];
+   input.setAttribute('aria-label','P'+(i+1)+' pumping during stress period '+(j+1));
+   input.addEventListener('change',()=>{const before=editSnapshot();const value=Number(input.value);
+     if(!Number.isFinite(value)||value<0||value>3000){input.value=pumpingRates[i][j];return}
+     pumpingRates[i][j]=value;recordEdit(before);queue();
+   });td.append(input);tr.append(td)});
+  table.append(tr);
+ }
+ host.append(table);
+}
+for(const [section,k,label,min,max,step] of spec){const el=document.createElement('div');el.className='parameter';el.innerHTML='<label for="'+k+'"><span>'+label+'</span><output id="'+k+'v"></output></label><input type="range" id="'+k+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+defs[k]+'">';$(section).appendChild(el);$(k).addEventListener('input',e=>{p[k]=+e.target.value;if((k==='Q'||k==='C')&&sourceAt()){sourceAt()[k==='Q'?'q':'c']=p[k];sourceUI()}labels();queue()})}
+function labels(){for(const k in p)if($(k+'v'))$(k+'v').textContent=k==='I'||k==='S'?p[k].toFixed(4):k==='DM'?p[k].toFixed(5):k==='N'?p[k].toFixed(2):k==='Decay'?p[k].toFixed(3):p[k].toLocaleString();$('A').disabled=p.I===0;$('Av').textContent=p.I===0?'Undefined':p.A+'°'}
+function inside(x,y,v){let hit=false;for(let i=0,j=v.length-1;i<v.length;j=i++){const a=v[i],b=v[j];if((a.y>y)!==(b.y>y)&&x<(b.x-a.x)*(y-a.y)/(b.y-a.y)+a.x)hit=!hit}return hit}
+function polygonCells(points){
+  // Non-point sources load all covered cell centres. Very small polygons can
+  // miss every centre; assign them to their centroid cell, never drop mass.
+  const out=[];
+  for(let j=0;j<N;j++)for(let i=0;i<N;i++)if(inside((i+.5)*DX,(j+.5)*DX,points))out.push(idx(i,j));
+  if(!out.length&&points.length>=3){
+    // Polygon centroid by signed area (not merely vertex mean).
+    let a=0,cx=0,cy=0;
+    for(let i=0;i<points.length;i++){
+      const u=points[i],v=points[(i+1)%points.length],cross=u.x*v.y-v.x*u.y;
+      a+=cross;cx+=(u.x+v.x)*cross;cy+=(u.y+v.y)*cross;
+    }
+    if(Math.abs(a)>1e-9)out.push(cell(cx/(3*a),cy/(3*a)));
+  }
+  return out;
+}
+function sourceCells(){
+  // Build a separate, immutable loading stencil for EVERY valid source.
+  // Combining stencils into one selected-source object drops other plumes.
+  const groups=[];
+  for(const [sourceIndex,src] of sources.entries()){
+    const cells=src.type==='polygon'
+      ? (src.closed&&src.vertices.length>=3?polygonCells(src.vertices):[])
+      : [cell(src.x,src.y)];
+    if(!cells.length)continue; // an unfinished polygon must not inject mass
+    groups.push({sourceIndex,cells,q:Math.max(0,Number(src.q)||0),c:Math.max(0,Number(src.c)||0),start:clamp(Number(src.start)||0,0,END),duration:clamp(Number(src.duration)||0,0,END)});
+  }
+  return groups;
+}
+function sourceLabel(i){const so=sources[i];return (so.type==='point'?'PS':'NPS')+(sources.slice(0,i+1).filter(s=>s.type===so.type).length)}
+function sourceAt(){return sources[activeSource]||sources[0]}
+function sourceCentroid(s){if(s.type==='point'||!s.vertices||!s.vertices.length)return{x:s.x,y:s.y};return{x:s.vertices.reduce((a,v)=>a+v.x,0)/s.vertices.length,y:s.vertices.reduce((a,v)=>a+v.y,0)/s.vertices.length}}
+function monitor(){return monitors[selectedMonitor]||monitors[0]}
+ function init(){const h=new Float64Array(NN),a=p.A*Math.PI/180,cs=Math.cos(a),sn=Math.sin(a),pump=new Float64Array(NN),weights=new Float64Array(NN);for(let j=0;j<N;j++)for(let i=0;i<N;i++)h[idx(i,j)]=-p.I*((i+.5)*DX*cs+(j+.5)*DX*sn);wells.forEach(w=>pump[cell(w.x,w.y)]+=w.q);const src=sourceCells();return{h,pump,weights,sourceGroups:src,m:new Float64Array(NN),time:0,injected:0,extracted:0,sourceInjected:new Float64Array(sources.length),wellExtracted:new Float64Array(wells.length),boundary:0,decayed:0,samples:[],btc:[],headHistory:[],peak:0,failed:false}}
+function flow(s){const h=s.h,old=h.slice(),T=p.K*p.B,st=p.S*DX*DX,a=p.A*Math.PI/180,cs=Math.cos(a),sn=Math.sin(a),hb=(x,y)=>-p.I*(x*cs+y*sn);for(let z=0;z<(s.time===0?120:28);z++){let max=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=idx(i,j),x=(i+.5)*DX,y=(j+.5)*DX,edge=(i===0)+(i===N-1)+(j===0)+(j===N-1),bc=2*((i===0?hb(0,y):0)+(i===N-1?hb(1000,y):0)+(j===0?hb(x,0):0)+(j===N-1?hb(x,1000):0)),rhs=T*((i?h[k-1]:0)+(i<N-1?h[k+1]:0)+(j?h[k-N]:0)+(j<N-1?h[k+N]:0)+bc)+st*old[k]-s.pump[k],d=rhs/(T*(4+edge)+st)-h[k];h[k]+=1.2*d;max=Math.max(max,Math.abs(d))}if(max<1e-9)break}const qx=new Float64Array((N+1)*N),qy=new Float64Array(N*(N+1));for(let j=0;j<N;j++)for(let i=0;i<=N;i++){const y=(j+.5)*DX;qx[j*(N+1)+i]=i===0?2*T*(hb(0,y)-h[idx(0,j)]):i===N?2*T*(h[idx(N-1,j)]-hb(1000,y)):T*(h[idx(i-1,j)]-h[idx(i,j)])}for(let j=0;j<=N;j++)for(let i=0;i<N;i++){const x=(i+.5)*DX;qy[j*N+i]=j===0?2*T*(hb(x,0)-h[idx(i,0)]):j===N?2*T*(h[idx(i,N-1)]-hb(x,1000)):T*(h[idx(i,j-1)]-h[idx(i,j)])}return{qx,qy}}
+function transport(s,qx,qy){const vol=p.N*p.B*DX*DX,nb=p.N*p.B,a=p.A*Math.PI/180,cs=Math.cos(a),sn=Math.sin(a);let peakQ=0;for(const q of qx)peakQ=Math.max(peakQ,Math.abs(q));for(const q of qy)peakQ=Math.max(peakQ,Math.abs(q));const v=Math.max(p.K*p.I/p.N,peakQ/(p.B*p.N*DX)),DL=p.AL*v+p.DM,DT=p.AT*v+p.DM,Dx=nb*(DL*cs*cs+DT*sn*sn),Dy=nb*(DL*sn*sn+DT*cs*cs);let out=0;for(let j=0;j<N;j++)for(let i=0;i<N;i++){const k=idx(i,j);out=Math.max(out,Math.max(0,qx[j*(N+1)+i+1])+Math.max(0,-qx[j*(N+1)+i])+Math.max(0,qy[(j+1)*N+i])+Math.max(0,-qy[j*N+i])+s.pump[k])}const stepMax=Math.min(1,.65*vol/(out+2*(Dx+Dy)+1e-12)),steps=Math.ceil(1/stepMax);if(steps>350){s.failed=true;return}const dt=1/steps,m=s.m,d=new Float64Array(NN);for(let z=0;z<steps;z++){d.fill(0);for(let j=0;j<N;j++)for(let i=0;i<=N;i++){const q=qx[j*(N+1)+i],l=i?idx(i-1,j):-1,rr=i<N?idx(i,j):-1,lc=l>=0?m[l]/vol:0,rc=rr>=0?m[rr]/vol:0,f=(q*(q>=0?lc:rc)+(l>=0&&rr>=0?Dx*(lc-rc):0))*dt;if(l>=0)d[l]-=f;else s.boundary-=f;if(rr>=0)d[rr]+=f;else s.boundary+=f}for(let j=0;j<=N;j++)for(let i=0;i<N;i++){const q=qy[j*N+i],b=j?idx(i,j-1):-1,t=j<N?idx(i,j):-1,bc=b>=0?m[b]/vol:0,tc=t>=0?m[t]/vol:0,f=(q*(q>=0?bc:tc)+(b>=0&&t>=0?Dy*(bc-tc):0))*dt;if(b>=0)d[b]-=f;else s.boundary-=f;if(t>=0)d[t]+=f;else s.boundary+=f}for(let k=0;k<NN;k++){const take=Math.min(m[k],s.pump[k]*m[k]/vol*dt),dec=m[k]*(1-Math.exp(-p.Decay*dt));d[k]-=take+dec;s.extracted+=take;s.decayed+=dec;
+  // If pumping wells share a grid cell, allocate removed contaminant mass
+  // in proportion to their respective pumping discharges.
+  if(take>0&&s.pump[k]>0)for(let wi=0;wi<wells.length;wi++){
+    if(cell(wells[wi].x,wells[wi].y)===k&&s.rates[wi]>0)
+      s.wellExtracted[wi]+=take*s.rates[wi]/s.pump[k];
+  }
+}const t=s.time+z*dt;// Add EACH source independently, with its own start day and duration. Overlapping footprints add mass to
+// the same cells; no source overwrites or masks another source.
+for(const sg of s.sourceGroups){
+  if(sg.q<=0||sg.c<=0||!sg.cells.length)continue;
+  const end=continuous?END:Math.min(END,sg.start+sg.duration);const active=Math.max(0,Math.min(t+dt,end)-Math.max(t,sg.start));if(active<=0)continue;const input=sg.q*sg.c*0.001*active;
+  s.injected+=input;
+  s.sourceInjected[sg.sourceIndex]+=input;
+  const perCell=input/sg.cells.length;
+  for(const k of sg.cells)d[k]+=perCell;
+}for(let k=0;k<NN;k++){m[k]+=d[k];if(m[k]<-1e-6||!Number.isFinite(m[k])){s.failed=true;return}if(m[k]<0)m[k]=0}}}
+function save(s){const vol=p.N*p.B*DX*DX,c=new Float32Array(NN);let peak=0,stored=0;for(let k=0;k<NN;k++){c[k]=s.m[k]/vol*1000;peak=Math.max(peak,c[k]);stored+=s.m[k]}s.peak=Math.max(s.peak,peak);s.samples.push({t:s.time,c,peak,stored,h:s.h.slice(),injected:s.injected,extracted:s.extracted,sourceInjected:Array.from(s.sourceInjected),wellExtracted:Array.from(s.wellExtracted),boundary:s.boundary,decayed:s.decayed,residual:s.injected-stored-s.extracted-s.boundary-s.decayed,rates:ratesAt(s.time)});s.btc.push({t:s.time,c:0})}
+function nice(v){
+  if(!(v>0))return 1;
+  const e=10**Math.floor(Math.log10(v)),m=v/e;
+  const steps=[1,1.2,1.5,2,2.5,3,4,5,6,8,10];
+  const step=steps.find(a=>m<=a*(1+1e-10))||10;
+  return Number((step*e).toPrecision(12));
+}function stop(){playing=false;last=null;cancelAnimationFrame(raf);$('play').textContent='▶'}
+function unfinishedSource(){return sources.find(s=>s.type==='polygon'&&!s.closed) || null}
+function blockUnfinishedPolygon(){
+  const source=unfinishedSource();
+  if(!source)return false;
+  ++run; // Invalidate any currently running asynchronous solver chunk.
+  clearTimeout(queueTimer);
+  stop();
+  job=null;result=null;globalMax=0;fixedMax=1;
+  $('play').disabled=true;
+  $('progress').style.width='0%';
+  const i=sources.indexOf(source),count=source.vertices.length;
+  const msg='Simulation blocked: '+sourceLabel(i)+' polygon is not closed ('+count+' vertices). Add at least 3 vertices and click Close polygon, or remove this source.';
+  $('status').textContent=msg;
+  $('status').style.color='#f5a94e';
+  $('hint').textContent=msg;
+  render();
+  return true;
+}
+function compute(){if(blockUnfinishedPolygon())return;if($('hint').textContent.startsWith('Simulation blocked:'))$('hint').textContent='Polygon closed. The simulation is ready.'; $('status').style.color='';const token=++run;stop();job=init();result=null;globalMax=0;fixedMax=1;$('status').textContent='Calculating five years on '+N+' × '+N+' grid…';$('progress').style.width='0%';$('play').disabled=true;save(job);render();function chunk(){if(token!==run)return;const s=job,limit=Math.min(END,s.time+(DX===5?1:DX===10?4:35));while(s.time<limit&&!s.failed){setPumpingForDay(s,s.time);const f=flow(s);transport(s,f.qx,f.qy);if(s.failed)break;s.time++;if(s.time%5===0||s.time===END)save(s)}$('progress').style.width=100*s.time/END+'%';if(s.failed){$('status').textContent='Numerical stability limit exceeded';result={samples:s.samples,btc:s.btc};globalMax=s.peak;fixedMax=nice(globalMax);render();return}if(s.time<END)setTimeout(chunk,0);else{result={samples:s.samples,btc:s.btc};globalMax=s.peak;fixedMax=nice(globalMax);$('play').disabled=false;$('status').textContent='Complete · '+s.samples.length+' frames';render()}}setTimeout(chunk,0)}
+function current(){const a=result?result.samples:job?job.samples:[];if(!a.length)return null;let lo=0,hi=a.length-1;while(lo<hi){const m=Math.ceil((lo+hi)/2);if(a[m].t<=day)lo=m;else hi=m-1}return a[lo]}
+function rgb(v){const colors=[[233,244,239],[139,202,193],[238,211,107],[235,133,71],[175,38,71]],x=clamp(v,0,1)*4,k=Math.min(3,Math.floor(x)),f=x-k;return colors[k].map((a,i)=>Math.round(a*(1-f)+colors[k+1][i]*f))}
+const map=$('map'),ctx=map.getContext('2d');
+// DISPLAY-ONLY auto-fit: the finite-difference domain and transport grid remain 0–1000 m.
+// Every object, polygon vertex, axis tick and pointer event uses this same viewport.
+const plotRect={left:60,top:20,size:712};
+let mapViewport={xmin:0,ymin:0,span:1000},frozenMapViewport=null,zoomMode='full',manualViewport=null,zoomStart=null,zoomEnd=null;
+function allObjectPositions(){const pts=[];wells.forEach(p=>pts.push(p));monitors.forEach(p=>pts.push(p));sources.forEach(src=>{if(src.type==='polygon')src.vertices.forEach(v=>pts.push(v));else pts.push(src)});return pts.filter(p=>Number.isFinite(p.x)&&Number.isFinite(p.y));}
+function fitMapViewport(){if(frozenMapViewport)return frozenMapViewport;
+ if(zoomMode==='full')return{xmin:0,ymin:0,span:1000};
+ if(zoomMode==='manual'&&manualViewport)return manualViewport;
+ const pts=allObjectPositions();if(!pts.length)return{xmin:0,ymin:0,span:1000};
+ let xmin=Math.min(...pts.map(p=>p.x)),xmax=Math.max(...pts.map(p=>p.x)),ymin=Math.min(...pts.map(p=>p.y)),ymax=Math.max(...pts.map(p=>p.y));
+ const span=Math.min(1000,Math.max(100,Math.max(xmax-xmin,ymax-ymin)*1.35));
+ return{xmin:clamp((xmin+xmax-span)/2,0,1000-span),ymin:clamp((ymin+ymax-span)/2,0,1000-span),span};
+}
+function setZoomMode(mode){zoomMode=mode;zoomStart=null;zoomEnd=null;
+ for(const [id,val] of [['fullExtent','full'],['manualZoom','manual'],['zoomExtents','extents']]){$(id).classList.toggle('selected',mode===val);$(id).setAttribute('aria-pressed',String(mode===val));}
+ if(mode==='full')manualViewport=null;if(mode==='manual'&&!manualViewport)manualViewport={...mapViewport};
+ map.style.cursor=mode==='manual'?'crosshair':'default';
+ $('hint').textContent=mode==='manual'?'Manual zoom: drag a rectangle or scroll the mouse wheel over the map to zoom at the pointer. Click Full grid to restore 1,000 × 1,000 m.':mode==='extents'?'View fitted to all configured objects.':'Showing full 1,000 × 1,000 m aquifer domain.';render();
+}
+function Xmap(x){return plotRect.left+(x-mapViewport.xmin)/mapViewport.span*plotRect.size}
+function Ymap(y){return plotRect.top+(mapViewport.ymin+mapViewport.span-y)/mapViewport.span*plotRect.size}
+function displayTicks(min,max){const span=max-min;const ideal=span/Math.max(4,Math.min(10,Math.floor(plotRect.size/75)));const base=10**Math.floor(Math.log10(Math.max(ideal,1e-8)));const step=[1,2,5,10].map(x=>x*base).find(x=>x>=ideal)||base*10;const vals=[];for(let k=Math.ceil((min-1e-8)/step);k*step<=max+1e-8;k++)vals.push(Number((k*step).toFixed(5)));return vals;}
+function drawMap(){
+ const c=ctx,s=current(),displayMax=scaleMaximum();
+ mapViewport=fitMapViewport();
+ const {left:L,top:T,size:P}=plotRect;
+ c.clearRect(0,0,map.width,map.height);
+ const css=getComputedStyle(document.documentElement),dark=document.documentElement.getAttribute('data-theme')==='dark'||document.body.classList.contains('dark');
+ const axisFg='#30465A',panelBg='#EDF3F7';
+ c.fillStyle=panelBg;c.fillRect(0,0,map.width,map.height);
+ const off=document.createElement('canvas');off.width=N;off.height=N;
+ const oc=off.getContext('2d'),im=oc.createImageData(N,N);
+ for(let j=0;j<N;j++)for(let i=0;i<N;i++){
+  const v=s?s.c[idx(i,N-1-j)]:0,col=rgb(v/displayMax),k=(j*N+i)*4;
+  im.data[k]=col[0];im.data[k+1]=col[1];im.data[k+2]=col[2];im.data[k+3]=255;
+ }
+ oc.putImageData(im,0,0);
+ const sx=mapViewport.xmin/1000*N,sy=(1000-mapViewport.ymin-mapViewport.span)/1000*N,sw=mapViewport.span/1000*N;
+ c.save();c.beginPath();c.rect(L,T,P,P);c.clip();
+ c.imageSmoothingEnabled=false;c.drawImage(off,sx,sy,sw,sw,L,T,P,P);
+ // Draw the actual finite-difference grid boundaries (DX = 1000/N metres), not rounded axis ticks.
+ // On fine grids, soften the strokes to retain readability of the concentration field.
+ const spacing=P*DX/mapViewport.span;
+ c.strokeStyle='rgba(21,44,61,.25)';
+ c.lineWidth=spacing<5?.55:.85;
+ c.beginPath();
+ for(let i=Math.max(0,Math.ceil(mapViewport.xmin/DX));i<=Math.min(N,Math.floor((mapViewport.xmin+mapViewport.span)/DX));i++){
+   const px=Math.round(Xmap(i*DX))+.5;c.moveTo(px,T);c.lineTo(px,T+P);
+ }
+ for(let j=Math.max(0,Math.ceil(mapViewport.ymin/DX));j<=Math.min(N,Math.floor((mapViewport.ymin+mapViewport.span)/DX));j++){
+   const py=Math.round(Ymap(j*DX))+.5;c.moveTo(L,py);c.lineTo(L+P,py);
+ }
+ c.stroke();
+ const X=Xmap,Y=Ymap;
+ sources.forEach((src,i)=>{const chosen=i===activeSource,label=sourceLabel(i);
+  if(src.type==='polygon'&&!src.vertices.length)return;
+  if(src.type==='polygon'&&src.vertices.length){c.beginPath();src.vertices.forEach((v,j)=>j?c.lineTo(X(v.x),Y(v.y)):c.moveTo(X(v.x),Y(v.y)));if(src.closed)c.closePath();c.strokeStyle='#b339a0';c.lineWidth=chosen?4:3;c.stroke();if(src.closed){c.fillStyle='rgba(176,53,152,.22)';c.fill()}
+    src.vertices.forEach(v=>{c.beginPath();c.arc(X(v.x),Y(v.y),6,0,7);c.fillStyle='#bc32ac';c.fill();c.strokeStyle='#fff';c.lineWidth=1.5;c.stroke()})
+  }else{c.beginPath();c.arc(X(src.x),Y(src.y),8,0,7);c.fillStyle='#ba2f99';c.fill();c.strokeStyle='white';c.lineWidth=chosen?4:2;c.stroke()}
+  const pt=sourceCentroid(src);c.font='bold 18px Aptos,Arial';c.fillStyle='#781b6f';c.textAlign='left';c.fillText(label,X(pt.x)+10,Y(pt.y)-10)
+ });
+ wells.forEach((a,i)=>{
+  const x=X(a.x),y=Y(a.y),r=13;
+  // Pumping-well cartographic icon: a single smooth clockwise curved arrow
+  // ABOVE and OUTSIDE the green well circle, matching the user's reference.
+  c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fillStyle='#25a85b';c.fill();
+  c.strokeStyle=i===selected?'#ffffff':'#114b2c';c.lineWidth=i===selected?3.5:2;c.stroke();
+  // Approved compact cartographic symbol: geometric circular arc outside the well,
+  // with a small clearance and a two-sided arrowhead symmetric about the terminal tangent.
+  // Coordinates reproduce the user-approved draft at 52% scale for the active map.
+  c.save();
+  c.translate(x,y);c.scale(.52,.52);c.translate(-122,-110);
+  const arrowColor='#163b2a';
+  c.lineCap='round';c.lineJoin='round';
+  const shaft=new Path2D('M 134 76 A 31 31 0 0 1 183 62');
+  const head=new Path2D('M 179.2 49.8 L 183 62 L 170.7 65.5');
+  for(const shape of [shaft,head]){
+    c.strokeStyle='rgba(255,255,255,.88)';c.lineWidth=10; c.stroke(shape);
+    c.strokeStyle=arrowColor;c.lineWidth=6.15;c.stroke(shape);
+  }
+  c.restore();
+  c.font='bold 16px Aptos,Arial';c.textAlign='left';c.lineWidth=3;
+  c.strokeStyle='#ffffff';c.fillStyle='#153d29';
+  c.strokeText('P'+(i+1),x+r+6,y+5);c.fillText('P'+(i+1),x+r+6,y+5);
+ });
+ monitors.forEach((m,i)=>{
+  const x=X(m.x),y=Y(m.y),r=12;
+  // Monitoring point: blue diamond, with label positioned outside the marker.
+  c.beginPath();c.moveTo(x,y-r);c.lineTo(x+r,y);c.lineTo(x,y+r);c.lineTo(x-r,y);c.closePath();
+  c.fillStyle='#247fc0';c.fill();c.strokeStyle=i===selectedMonitor?'#ffffff':'#b5e6fc';
+  c.lineWidth=i===selectedMonitor?3.5:2;c.stroke();
+  c.font='bold 16px Aptos,Arial';c.textAlign='left';c.lineWidth=3;
+  c.strokeStyle='#ffffff';c.fillStyle='#164b78';
+  c.strokeText('M'+(i+1),x+r+6,y+5);c.fillText('M'+(i+1),x+r+6,y+5);
+ });
+ c.font='bold 17px Aptos,Arial';c.textAlign='left';c.lineWidth=3;c.strokeStyle='#E6F0F4';c.fillStyle='#244450';
+ const topText=p.I===0?'Regional gradient = 0':'Regional flow';c.strokeText(topText,L+12,T+26);c.fillText(topText,L+12,T+26);
+ if(p.I>0){const a=p.A*Math.PI/180,x0=L+P*.13,y0=T+P*.19,x1=x0+P*.12*Math.cos(a),y1=y0-P*.12*Math.sin(a),ang=Math.atan2(y1-y0,x1-x0);
+  // Black regional-flow arrow in dark mode, with a pale outline to stay visible on dark plume cells.
+  c.lineCap='round';c.strokeStyle='#FFFFFF';c.lineWidth=8;
+  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+  c.strokeStyle='#173d55';c.lineWidth=5;
+  c.beginPath();c.moveTo(x0,y0);c.lineTo(x1,y1);c.stroke();
+  const tip1=[x1-13*Math.cos(ang-.5),y1-13*Math.sin(ang-.5)],tip2=[x1-13*Math.cos(ang+.5),y1-13*Math.sin(ang+.5)];
+  c.beginPath();c.moveTo(x1,y1);c.lineTo(...tip1);c.lineTo(...tip2);c.closePath();
+  c.lineWidth=2;c.strokeStyle='#FFFFFF';c.stroke();c.fillStyle=dark?'#000000':'#173d55';c.fill()}
+ c.restore();
+ // The axes are outside the sampled aquifer image and always show real-world metres.
+ if(zoomStart&&zoomEnd){const xa=Xmap(zoomStart.x),xb=Xmap(zoomEnd.x),ya=Ymap(zoomStart.y),yb=Ymap(zoomEnd.y);c.save();c.strokeStyle='#085bd8';c.lineWidth=2;c.setLineDash([7,4]);c.strokeRect(Math.min(xa,xb),Math.min(ya,yb),Math.abs(xb-xa),Math.abs(yb-ya));c.restore();}
+ c.strokeStyle=axisFg;c.lineWidth=1.6;c.beginPath();c.moveTo(L,T);c.lineTo(L,T+P);c.lineTo(L+P,T+P);c.stroke();
+ c.fillStyle=axisFg;c.font='bold 14px Aptos,Arial';
+ for(const x of displayTicks(mapViewport.xmin,mapViewport.xmin+mapViewport.span)){
+  const px=Xmap(x);c.beginPath();c.moveTo(px,T+P);c.lineTo(px,T+P+6);c.stroke();c.textAlign='center';c.fillText(String(x),px,T+P+21)
+ }
+ for(const y of displayTicks(mapViewport.ymin,mapViewport.ymin+mapViewport.span)){
+  const py=Ymap(y);c.beginPath();c.moveTo(L-6,py);c.lineTo(L,py);c.stroke();c.textAlign='right';c.fillText(String(y),L-10,py+5)
+ }
+ c.font='bold 16px Aptos,Arial';c.textAlign='center';c.fillText('X (m)',L+P/2,788);
+ c.save();c.translate(17,T+P/2);c.rotate(-Math.PI/2);c.fillText('Y (m)',0,0);c.restore();
+}
+function scaleMaximum(){const s=current();return scaleMode==='current'?Math.max(s?s.peak:0,1e-12):fixedMax}
+function drawScale(){const s=current(),v=s?s.peak:0,displayMax=scaleMaximum(),ratio=clamp(v/displayMax,0,1);$('pointer').setAttribute('transform','translate(0 '+(386-372*ratio)+')');$('maxConc').textContent=v.toFixed(3)+' mg/L';$('scaleNote').textContent=scaleMode==='current'?'· 0–'+v.toFixed(3)+' mg/L (current frame)':result?'· fixed 0–'+fixedMax.toLocaleString()+' mg/L':'· computing full-run scale';const ticks=$('ticks');ticks.replaceChildren();const ns='http://www.w3.org/2000/svg';for(let k=0;k<=4;k++){const y=386-k*372/4,line=document.createElementNS(ns,'line'),t=document.createElementNS(ns,'text');line.setAttribute('x1',37);line.setAttribute('x2',41);line.setAttribute('y1',y);line.setAttribute('y2',y);line.setAttribute('stroke','#33485a');t.setAttribute('x',43);t.setAttribute('y',y+4);t.textContent=Number((displayMax*k/4).toPrecision(3)).toString();ticks.append(line,t)}}
+function drawChart(){const el=$('chart'),rect=el.getBoundingClientRect(),w=rect.width;if(w<5)return;const h=200,dpr=Math.min(2,window.devicePixelRatio||1);el.width=Math.round(w*dpr);el.height=Math.round(h*dpr);const c=el.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const L=45,R=w-12,T=12,B=h-26,a=(result?result.samples:job?job.samples:[]).map(z=>({t:z.t,c:z.c[cell(monitor().x,monitor().y)]})),max=Math.max(.001,...a.map(z=>z.c))*1.1;c.strokeStyle='#dce5eb';c.fillStyle='#718393';c.font='11px Aptos,Arial,sans-serif';for(let i=0;i<=4;i++){const y=B-(B-T)*i/4;c.beginPath();c.moveTo(L,y);c.lineTo(R,y);c.stroke();c.textAlign='right';c.fillText((max*i/4).toFixed(max<1?3:1),L-5,y+4)}for(let i=0;i<=5;i++){c.textAlign='center';c.fillText(i+'y',L+(R-L)*i/5,B+17)}c.beginPath();a.forEach((z,i)=>{const x=L+(R-L)*z.t/END,y=B-z.c/max*(B-T);i?c.lineTo(x,y):c.moveTo(x,y)});c.strokeStyle='#248cc0';c.lineWidth=2.5;c.stroke();const x=L+(R-L)*day/END;c.beginPath();c.moveTo(x,T);c.lineTo(x,B);c.strokeStyle='#d77a34';c.setLineDash([4,4]);c.stroke();c.setLineDash([])}
+function drawHeadChart(){const el=$('headChart'),rect=el.getBoundingClientRect(),w=rect.width;if(w<5)return;const h=175,dpr=Math.min(2,window.devicePixelRatio||1);el.width=Math.round(w*dpr);el.height=Math.round(h*dpr);const c=el.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);const L=47,R=w-12,T=12,B=h-27,records=result?result.samples:job?job.samples:[],k=cell(monitor().x,monitor().y),vals=records.map(z=>z.h[k]);let low=Math.min(0,...vals),high=Math.max(0,...vals);if(high-low<.001){low-=.5;high+=.5}else{const pad=(high-low)*.08;low-=pad;high+=pad}c.font='11px Aptos,Arial,sans-serif';c.fillStyle=document.body.classList.contains('dark')?'#b2c5d8':'#718393';c.strokeStyle=document.body.classList.contains('dark')?'#35516b':'#dce5eb';for(let i=0;i<=4;i++){let yy=B-(B-T)*i/4;c.beginPath();c.moveTo(L,yy);c.lineTo(R,yy);c.stroke();c.textAlign='right';c.fillText((low+(high-low)*i/4).toFixed(2),L-5,yy+4)}for(let i=0;i<=5;i++){c.textAlign='center';c.fillText(i+'y',L+(R-L)*i/5,B+17)}c.beginPath();records.forEach((z,i)=>{const xx=L+(R-L)*z.t/END,yy=B-(z.h[k]-low)/(high-low)*(B-T);i?c.lineTo(xx,yy):c.moveTo(xx,yy)});c.strokeStyle='#29a2d3';c.lineWidth=2.5;c.stroke();const xx=L+(R-L)*day/END;c.beginPath();c.moveTo(xx,T);c.lineTo(xx,B);c.strokeStyle='#e19038';c.setLineDash([4,3]);c.stroke();c.setLineDash([])}
+const monitoringVisibility={};
+const MONITOR_COLORS=['#b0299a','#2097c8','#28a85e','#e59d32','#9065d6','#d36868'];
+const INJECTION_COLORS=['#b66d20','#138b85','#8c55bf'];
+const EXTRACTION_COLORS=['#1e6a91','#805127','#62609c','#9e3b79'];
+function monitorSeries(){return [{key:'c',label:'Concentration',color:MONITOR_COLORS[0]},{key:'h',label:'Hydraulic head',color:MONITOR_COLORS[1]},...wells.map((v,i)=>({key:'p'+i,label:'P'+(i+1)+' pumping',color:MONITOR_COLORS[2+i]})),{key:'total',label:'Total pumping',color:'#e6d04a'},...sources.map((v,i)=>({key:'inj'+i,label:sourceLabel(i)+' injected (kg)',color:INJECTION_COLORS[i%INJECTION_COLORS.length]})),{key:'injTotal',label:'Total injected (kg)',color:'#bd4951'},...wells.map((v,i)=>({key:'ext'+i,label:'P'+(i+1)+' extracted (kg)',color:EXTRACTION_COLORS[i%EXTRACTION_COLORS.length]})),{key:'extTotal',label:'Total extracted (kg)',color:'#343c4c'}]}
+function seriesEnabled(key){return monitoringVisibility[key]!==false}
+function drawCombinedMonitorCharts(exportRender=null){
+ const host=$('monitorCharts'),series=monitorSeries();
+ if(host.children.length!==monitors.length){host.replaceChildren();monitors.forEach(()=>{const sec=document.createElement('section');sec.className='panel';sec.innerHTML='<h2></h2><canvas class="monitor-combined-canvas"></canvas><div class="monitor-combined-legend"></div><div class="diagram-export-tools"><label>Image export <select class="chart-dpi"><option value="300">300 dpi</option><option value="600">600 dpi</option><option value="1200">1200 dpi</option></select></label><button type="button" class="chart-png">PNG</button><button type="button" class="chart-jpg">JPG</button></div>';sec.querySelector(".chart-png").onclick=()=>exportMonitorImage(host.children.length?Array.from(host.children).indexOf(sec):0,"png",sec);sec.querySelector(".chart-jpg").onclick=()=>exportMonitorImage(Array.from(host.children).indexOf(sec),"jpeg",sec);host.append(sec)})}
+ const records=result?result.samples:job?job.samples:[],totalQ=totalAt(day),maxQ=Math.max(1,...records.flatMap(v=>[...(v.rates||[]), (v.rates||[]).reduce((a,b)=>a+b,0)]).map(v=>v*1.12),totalQ*1.12),maxMass=Math.max(1,...records.map(v=>Math.max(v.injected||0,v.extracted||0)))*1.08;
+ monitors.forEach((m,i)=>{
+  if(exportRender && i!==exportRender.index)return;
+  const sec=host.children[i],canvas=exportRender?exportRender.canvas:sec.querySelector('canvas'),legend=sec.querySelector('.monitor-combined-legend');
+  sec.querySelector('h2').textContent='M'+(i+1)+' · Concentration, hydraulic head, pumping and contaminant mass · ('+Math.round(m.x)+', '+Math.round(m.y)+') m';
+  const oldKeys=[...legend.querySelectorAll('input')].map(e=>e.dataset.series);
+  if(oldKeys.join('|')!==series.map(s=>s.key).join('|')){
+   legend.replaceChildren();series.forEach(s=>{const label=document.createElement('label');label.className='monitor-series-toggle';const cb=document.createElement('input');cb.type='checkbox';cb.dataset.series=s.key;cb.checked=seriesEnabled(s.key);cb.addEventListener('change',()=>{monitoringVisibility[s.key]=cb.checked;drawCombinedMonitorCharts()});const dot=document.createElement('span');dot.className='monitor-series-dot';dot.style.background=s.color;label.append(cb,dot,document.createTextNode(s.label));legend.append(label)})
+  }else legend.querySelectorAll('input').forEach(e=>e.checked=seriesEnabled(e.dataset.series));
+  const w=exportRender?850:canvas.getBoundingClientRect().width;if(w<10)return;const h=275,dpr=exportRender?exportRender.scale:Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);
+  // Resizing a canvas erases its pixels, including any white fill drawn by the caller.
+  // Explicitly paint an opaque light-mode background AFTER resizing for every export.
+  const isExport=Boolean(exportRender);
+  if(isExport){c.fillStyle='#ffffff';c.fillRect(0,0,w,h)}
+  const dark=!isExport && document.body.classList.contains('dark'),ink=dark?'#c7d9e9':'#52697c',grid=dark?'#3b5267':'#d7e2ea';
+  const L=79,R=w-159,T=14,B=h-36,k=cell(m.x,m.y),maxC=Math.max(.01,...records.map(z=>z.c[k]))*1.08;
+  const headVals=records.map(z=>z.h[k]);let low=headVals.length?Math.min(...headVals):0,high=headVals.length?Math.max(...headVals):1;if(high-low<.01){low-=.5;high+=.5}else{const pad=(high-low)*.08;low-=pad;high+=pad}
+  if(R<=L+30)return;
+  c.font='10px Aptos,Arial,sans-serif';c.fillStyle=ink;
+  const ylabel=(name,x,rot)=>{c.save();c.fillStyle=ink;c.font='bold 10px Aptos,Arial,sans-serif';c.textAlign='center';c.textBaseline='middle';c.translate(x,(T+B)/2);c.rotate(rot);c.fillText(name,0,0);c.restore()};
+  ylabel('Concentration (mg/L)',11,-Math.PI/2);ylabel('Head (m)',R+46,Math.PI/2);ylabel('Q (m³/day)',R+101,Math.PI/2);ylabel('Mass (kg)',w-10,Math.PI/2);
+  for(let j=0;j<=4;j++){const y=B-(B-T)*j/4;c.strokeStyle=grid;c.lineWidth=1;c.beginPath();c.moveTo(L,y);c.lineTo(R,y);c.stroke();c.fillStyle=ink;c.textAlign='right';c.fillText((maxC*j/4).toFixed(maxC<1?3:1),L-5,y+4);c.textAlign='left';c.fillText((low+(high-low)*j/4).toFixed(2),R+5,y+4);c.fillText((maxQ*j/4).toFixed(0),R+65,y+4);c.fillText((maxMass*j/4).toFixed(0),R+119,y+4)}
+  for(let j=0;j<=5;j++){c.textAlign='center';c.fillText(j+'y',L+(R-L)*j/5,B+17)}
+  const plot=(fn,color,dash=[])=>{c.save();c.beginPath();records.forEach((z,j)=>{const x=L+(R-L)*z.t/END,y=B-(B-T)*fn(z);if(j)c.lineTo(x,y);else c.moveTo(x,y)});c.strokeStyle=color;c.lineWidth=2.4;c.setLineDash(dash);c.stroke();c.restore()};
+  if(seriesEnabled('c'))plot(z=>z.c[k]/maxC,MONITOR_COLORS[0]);
+  if(seriesEnabled('h'))plot(z=>(z.h[k]-low)/(high-low),MONITOR_COLORS[1]);
+  wells.forEach((well,j)=>{if(seriesEnabled('p'+j))plot(z=>(z.rates?.[j]??well.q)/maxQ,MONITOR_COLORS[2+j],[6,3])});
+  if(seriesEnabled('total'))plot(z=>(z.rates||wells.map(w=>w.q)).reduce((a,b)=>a+b,0)/maxQ,'#e6d04a',[8,3]);
+  sources.forEach((src,j)=>{if(seriesEnabled('inj'+j))plot(z=>(z.sourceInjected?.[j]||0)/maxMass,INJECTION_COLORS[j%INJECTION_COLORS.length],[3,3])});
+  if(seriesEnabled('injTotal'))plot(z=>(z.injected||0)/maxMass,'#bd4951',[10,3]);
+  wells.forEach((well,j)=>{if(seriesEnabled('ext'+j))plot(z=>(z.wellExtracted?.[j]||0)/maxMass,EXTRACTION_COLORS[j%EXTRACTION_COLORS.length],[4,5])});
+  if(seriesEnabled('extTotal'))plot(z=>(z.extracted||0)/maxMass,'#343c4c',[11,4]);
+  const x=L+(R-L)*day/END;c.beginPath();c.moveTo(x,T);c.lineTo(x,B);c.strokeStyle='#df8d3f';c.setLineDash([4,4]);c.stroke();c.setLineDash([]);
+ });
+}
+function liveData(){const tbody=$('liveRows');if(!tbody)return;tbody.replaceChildren();const a=result?result.samples:job?job.samples:[],s=current();function hist(k){let peak=0,when=0;for(const v of a){if(v.t>day)break;const value=v.c[k];if(value>peak){peak=value;when=v.t}}return{peak,when}}function row(cells,source=false){const tr=document.createElement('tr');if(source)tr.className='source-row';for(const value of cells){const td=document.createElement('td');td.textContent=value;tr.append(td)}tbody.append(tr)}const fmt=v=>Number(v).toFixed(2);for(let i=0;i<wells.length;i++){const w=wells[i],k=cell(w.x,w.y),v=hist(k);row(['P'+(i+1),Math.round(w.x),Math.round(w.y),ratesAt(day)[i], s?fmt(s.c[k]):'—',fmt(v.peak),v.when,s?.wellExtracted?fmt(s.wellExtracted[i]):'—'])}for(let i=0;i<monitors.length;i++){const m=monitors[i],k=cell(m.x,m.y),v=hist(k);row(['M'+(i+1),Math.round(m.x),Math.round(m.y),'—',s?fmt(s.c[k]):'—',fmt(v.peak),v.when,'—'])}for(let i=0;i<sources.length;i++){const so=sources[i],pt=sourceCentroid(so);row([sourceLabel(i),Math.round(pt.x),Math.round(pt.y),so.q,fmt(so.c),'—','—',s?.sourceInjected?fmt(s.sourceInjected[i]):'—'],true)}}
+function render(){if(!unfinishedSource()&&$('hint').textContent.startsWith('Simulation blocked:'))$('hint').textContent='Polygon completed. All configured sources are ready.';const s=current();$('dayLabel').textContent='Day '+Math.round(day)+' · '+(day/365).toFixed(2)+' yr';$('vel').textContent=(p.K*p.I/p.N).toFixed(3);$('pump').textContent=totalAt(day).toLocaleString();$('monXY').textContent='M'+(selectedMonitor+1)+' ('+monitor().x.toFixed(0)+', '+monitor().y.toFixed(0)+') m';if(s)for(const [id,key] of [['in','injected'],['stored','stored'],['extracted','extracted'],['boundary','boundary'],['decayed','decayed'],['residual','residual']])$(id).textContent=s[key].toFixed(2);$('headXY').textContent=$('monXY').textContent;drawMap();drawScale();drawChart();drawHeadChart();drawCombinedMonitorCharts();liveData()}
+function choose(t){tool=t;document.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('active',b.dataset.tool===t));$('hint').textContent=t==='none'?'No map tool active. Choose a tool to add an object; drag existing markers to move them.':t==='source'?'Click map to place or drag a point source PS.':t==='monitor'?'Click an empty position to add a new monitoring well (maximum 2). Drag existing markers to move them.':t==='well'?'Click an empty position to add a new pumping well (maximum 4). Drag existing markers to move them.':'Click vertices to define a non-point source, then Close polygon. Undo reverses the last editing action.'}
+function wellUI(){normalizeRates();pumpingScheduleUI();const host=$('wells');host.replaceChildren();wells.forEach((w,i)=>{const d=document.createElement('div');d.className='well';const b=document.createElement('button');b.textContent='P'+(i+1);b.className=i===selected?'active':'';b.title='Select well to reposition on map';b.onclick=()=>{selected=i;choose('well');wellUI();render()};const slider=document.createElement('input');slider.type='range';slider.min=0;slider.max=3000;slider.step=25;slider.value=w.q;slider.disabled=variablePumping;slider.title=variablePumping?'Disable Variable pumping to edit the constant rate':'Constant pumping rate';const val=document.createElement('small');val.textContent=(variablePumping?'SP schedule':w.q+' m³/d');if(variablePumping)val.classList.add('variable-rate-locked');slider.oninput=()=>{if(variablePumping)return;w.q=+slider.value;val.textContent=w.q+' m³/d';queue()};const del=document.createElement('button');del.textContent='×';del.title='Remove well';del.disabled=wells.length===1;del.onclick=()=>{if(wells.length>1){wells.splice(i,1);selected=clamp(selected,0,wells.length-1);wellUI();compute()}};d.append(b,slider,val,del);host.append(d)});$('add').disabled=wells.length>=4}
+function monitorUI(){const host=$('monitors');host.replaceChildren();monitors.forEach((m,i)=>{const d=document.createElement('div');d.className='monitor-row';const b=document.createElement('button');b.textContent='M'+(i+1);b.className=i===selectedMonitor?'active':'';b.title='Select monitoring well';b.onclick=()=>{selectedMonitor=i;choose('monitor');monitorUI();render()};const coords=document.createElement('small');coords.textContent=Math.round(m.x)+', '+Math.round(m.y)+' m';const select=document.createElement('button');select.textContent='Move';select.title='Click this then choose map position';select.onclick=()=>{selectedMonitor=i;choose('monitor');monitorUI()};const del=document.createElement('button');del.textContent='×';del.title='Remove monitoring well';del.disabled=monitors.length===1;del.onclick=()=>{if(monitors.length>1){monitors.splice(i,1);selectedMonitor=clamp(selectedMonitor,0,monitors.length-1);monitorUI();render()}};d.append(b,coords,select,del);host.append(d)});$('addMonitor').disabled=monitors.length>=2}
+$('addMonitor').onclick=()=>{if(monitors.length>=2)return;monitors.push({x:500+90*monitors.length,y:535});selectedMonitor=monitors.length-1;monitorUI();choose('monitor');render()};
+function sourceUI(){const host=$('sourceList');host.replaceChildren();sources.forEach((s,i)=>{const row=document.createElement('div');row.className='source-item';const name=document.createElement('button');name.textContent=sourceLabel(i);name.className=i===activeSource?'active':'';name.onclick=()=>{activeSource=i;labels();choose(s.type==='point'?'source':'polygon');sourceUI();render()};const q=document.createElement('input');q.type='number';q.min=0;q.max=100;q.step=1;q.value=s.q;q.title='Leak Q (m³/day)';q.onchange=()=>{s.q=clamp(+q.value,0,100);if(i===activeSource){labels()}queue()};const c=document.createElement('input');c.type='number';c.min=0;c.max=1000;c.step=10;c.value=s.c;c.title='Source concentration (mg/L)';c.onchange=()=>{s.c=clamp(+c.value,0,1000);if(i===activeSource){labels()}queue()};const del=document.createElement('button');del.textContent='×';del.title='Remove source';del.onclick=()=>{sources.splice(i,1);activeSource=clamp(activeSource,0,Math.max(0,sources.length-1));sourceUI();queue();render()};row.append(name,q,c,del);host.append(row);
+ const timing=document.createElement('div');timing.className='source-timing';timing.setAttribute('aria-label',sourceLabel(i)+' independent loading schedule');
+ const scheduleSlider=(field,label,max)=>{const wrap=document.createElement('label');wrap.className='source-time-field';const head=document.createElement('span');head.className='source-time-heading';const title=document.createElement('span');title.textContent=label;const number=document.createElement('output');number.textContent=Math.round(s[field])+' d';head.append(title,number);const slider=document.createElement('input');slider.type='range';slider.min='0';slider.max=String(max);slider.step='1';slider.value=String(s[field]);slider.disabled=field==='duration'&&continuous;slider.title=sourceLabel(i)+' '+label;slider.oninput=()=>{s[field]=Number(slider.value);number.textContent=s[field]+' d';if(field==='start'&&s.start+s.duration>END){s.duration=Math.max(0,END-s.start);sourceUI()}else if(field==='duration'&&s.start+s.duration>END){s.duration=Math.max(0,END-s.start);slider.value=s.duration;number.textContent=s.duration+' d'}queue()};wrap.append(head,slider);return wrap};
+ timing.append(scheduleSlider('start','Start day',END),scheduleSlider('duration','Duration',END-s.start));host.append(timing)
+ });}
+function queue(){clearTimeout(queueTimer);if(blockUnfinishedPolygon())return;queueTimer=setTimeout(compute,250)}$('deselectAll').onclick=()=>{pendingPlacement=null;selected=-1;selectedMonitor=-1;activeSource=-1;dragTarget=null;choose('none');wellUI();monitorUI();sourceUI();render()};document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{const t=b.dataset.tool;if(t==='well'||t==='monitor'){const count=t==='well'?wells.length:monitors.length,max=t==='well'?4:2;if(count>=max){pendingPlacement=null;$('hint').textContent='Maximum '+max+' '+(t==='well'?'pumping':'monitoring')+' wells reached.';return}pendingPlacement=t;selected=-1;selectedMonitor=-1;activeSource=-1;choose(t);wellUI();monitorUI();sourceUI();render();return}pendingPlacement=null;if(t==='source'||t==='polygon'){if(sources.length>=3){$('hint').textContent='Maximum 3 combined sources reached. Remove a source to add another.';return}const n=sources.filter(s=>s.type===(t==='source'?'point':'polygon')).length+1;sources.push({type:t==='source'?'point':'polygon',x:350,y:350,q:(sources[activeSource]?.q??20),c:(sources[activeSource]?.c??500),start:0,duration:60,vertices:[],closed:false});activeSource=sources.length-1;sourceUI();queue()}choose(t);render()});
+function mapPoint(e){const r=map.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*map.width,py=(e.clientY-r.top)/r.height*map.height;return{x:clamp(mapViewport.xmin+(px-plotRect.left)/plotRect.size*mapViewport.span,0,999.99),y:clamp(mapViewport.ymin+(1-(py-plotRect.top)/plotRect.size)*mapViewport.span,0,999.99)}}
+function nearestObject(pt){let best=null,dist=28*mapViewport.span/plotRect.size;function test(o){const d=Math.hypot(pt.x-o.x,pt.y-o.y);if(d<dist){dist=d;best=o}}wells.forEach((w,i)=>test({type:'well',i,x:w.x,y:w.y}));monitors.forEach((m,i)=>test({type:'monitor',i,x:m.x,y:m.y}));sources.forEach((s,i)=>{if(s.type==='point')test({type:'source',i,x:s.x,y:s.y});else s.vertices.forEach((v,j)=>test({type:'vertex',i,j,x:v.x,y:v.y}))});return best}
+// Cursor-anchored mouse-wheel zoom in Manual zoom mode. The underlying model grid is unaffected.
+map.addEventListener('wheel',e=>{
+ if(zoomMode!=='manual')return;
+ const r=map.getBoundingClientRect();
+ const px=(e.clientX-r.left)/r.width*map.width,py=(e.clientY-r.top)/r.height*map.height;
+ if(px<plotRect.left||px>plotRect.left+plotRect.size||py<plotRect.top||py>plotRect.top+plotRect.size)return;
+ e.preventDefault();
+ const vp=manualViewport||mapViewport;
+ const u=(px-plotRect.left)/plotRect.size,v=1-(py-plotRect.top)/plotRect.size;
+ const focusX=vp.xmin+u*vp.span,focusY=vp.ymin+v*vp.span;
+ const nextSpan=clamp(vp.span*Math.exp(e.deltaY*0.0013),35,1000);
+ manualViewport={xmin:clamp(focusX-u*nextSpan,0,1000-nextSpan),ymin:clamp(focusY-v*nextSpan,0,1000-nextSpan),span:nextSpan};
+ zoomStart=null;zoomEnd=null;render();
+},{passive:false});
+map.onpointerdown=e=>{const pt=mapPoint(e);if(zoomMode==='manual'){zoomStart=pt;zoomEnd=pt;map.setPointerCapture(e.pointerId);render();return;}
+// New wells are created ONLY upon an empty-map click in placement mode.
+if(pendingPlacement&&!nearestObject(pt)){if(pendingPlacement==='well'&&wells.length<4){wells.push({x:pt.x,y:pt.y,q:250});selected=wells.length-1;wellUI();pendingPlacement=null;choose('none');compute();return}if(pendingPlacement==='monitor'&&monitors.length<2){monitors.push({x:pt.x,y:pt.y});selectedMonitor=monitors.length-1;monitorUI();pendingPlacement=null;choose('none');render();return}}
+// While drawing a new non-point source, each map click adds a polygon node;
+// an unfinished polygon never places a separate magenta point marker.
+if(tool==='polygon'){const polySource=sourceAt();if(polySource&&polySource.type==='polygon'&&!polySource.closed){polySource.vertices.push(pt);polySource.x=pt.x;polySource.y=pt.y;blockUnfinishedPolygon();render();return}}
+const found=nearestObject(pt);if(found){if(pendingPlacement){$('hint').textContent='That location contains an existing object. Click an empty map location to add, or Deselect all.';return}dragTarget=found;frozenMapViewport={...mapViewport};map.setPointerCapture(e.pointerId);if(tool!=='none'){if(found.type==='source'||found.type==='vertex')activeSource=found.i;if(found.type==='monitor')selectedMonitor=found.i;if(found.type==='well')selected=found.i;sourceUI();wellUI();monitorUI()}render();return}if(tool==='source'){if(!sources.length)return;const s=sourceAt();if(s.type==='point'){s.x=pt.x;s.y=pt.y;queue()}}else if(tool==='monitor'){if(selectedMonitor>=0&&monitors[selectedMonitor]){monitors[selectedMonitor]={...pt};monitorUI();render()}}else if(tool==='well'){if(selected>=0&&wells[selected]){wells[selected].x=pt.x;wells[selected].y=pt.y;wellUI();queue()}}else if(tool==='polygon'){const s=sourceAt();if(s&&s.type==='polygon'&&!s.closed){s.vertices.push(pt);s.x=pt.x;s.y=pt.y;blockUnfinishedPolygon();render()}}};
+map.onpointermove=e=>{if(zoomStart){zoomEnd=mapPoint(e);render();return;}if(!dragTarget)return;const pt=mapPoint(e),d=dragTarget;if(d.type==='well'){Object.assign(wells[d.i],pt)}else if(d.type==='monitor'){Object.assign(monitors[d.i],pt)}else if(d.type==='source'){Object.assign(sources[d.i],pt)}else if(d.type==='vertex'){Object.assign(sources[d.i].vertices[d.j],pt)}render()};
+function endDrag(){if(zoomStart){const a=zoomStart,b=zoomEnd||a;zoomStart=null;zoomEnd=null;const width=Math.abs(b.x-a.x),height=Math.abs(b.y-a.y);if(Math.max(width,height)>12){const span=Math.min(1000,Math.max(35,width,height));manualViewport={xmin:clamp((a.x+b.x-span)/2,0,1000-span),ymin:clamp((a.y+b.y-span)/2,0,1000-span),span};}render();return;}if(!dragTarget)return;const d=dragTarget;dragTarget=null;frozenMapViewport=null;if(d.type==='monitor'){monitorUI();render()}else if(d.type==='well'){wellUI();queue()}else{sourceUI();queue()}}
+map.onpointerup=endDrag;map.onpointercancel=endDrag;
+$('close').onclick=()=>{const s=sourceAt();if(s&&s.type==='polygon'&&!s.closed){if(s.vertices.length<3){blockUnfinishedPolygon();return;}s.closed=true;sourceUI();queue();render()}};
+$('undo').onclick=undoLastAction;
+$('add').onclick=()=>{if(wells.length>=4)return;wells.push({x:500+wells.length*60,y:340+wells.length*45,q:250});selected=wells.length-1;choose('well');wellUI();compute()};function setLeakMode(value,recalculate=true){const changed=continuous!==value;continuous=value;$('finiteMode').classList.toggle('selected',!continuous);$('continuousMode').classList.toggle('selected',continuous);$('finiteMode').setAttribute('aria-pressed',String(!continuous));$('continuousMode').setAttribute('aria-pressed',String(continuous));sourceUI();if(changed&&recalculate)queue()}$('finiteMode').onclick=()=>setLeakMode(false);$('continuousMode').onclick=()=>setLeakMode(true);function setScaleMode(mode){scaleMode=mode;for(const [id,on] of [['fixedScale',mode==='fixed'],['currentScale',mode==='current']]){const b=$(id);b.classList.toggle('selected',on);b.setAttribute('aria-pressed',String(on))}render()}$('fixedScale').onclick=()=>setScaleMode('fixed');$('currentScale').onclick=()=>setScaleMode('current');$('fullExtent').onclick=()=>setZoomMode('full');$('manualZoom').onclick=()=>setZoomMode('manual');$('zoomExtents').onclick=()=>setZoomMode('extents');
+$('gridSize').onchange=()=>{DX=+$('gridSize').value;N=1000/DX;NN=N*N;$('gridMeta').textContent='Domain: 1,000 × 1,000 m · Grid: '+N+' × '+N+' · Δx = Δy = '+DX+' m';$('cellCount').textContent=NN.toLocaleString();$('gridWarning').textContent=DX===5?'EXPERIMENTAL: 40,000 cells and 1,825 days; can take substantial time or exceed browser memory. Start with 25 m.':DX===10?'100 × 100 grid (10,000 cells): significantly slower than 25 m.':'40 × 40 grid (1,600 cells): recommended for responsive simulations.';compute()};$('theme').onclick=()=>{document.body.classList.toggle('dark');$('theme').textContent=document.body.classList.contains('dark')?'☀ Light mode':'☾ Dark mode';render()};
+let recording=false;let recordingCancel=false;let recorder=null;let videoStream=null;let recordingRaf=0;const sleep=ms=>new Promise(r=>setTimeout(r,ms));function videoDraw(c,w,h,frameDay,mode,intro=false,final=false){
+  const dark=document.body.classList.contains('dark');
+  const BG=dark?'#091320':'#edf3f7',PANEL=dark?'#112337':'#ffffff',EDGE=dark?'#385875':'#cad9e5';
+  const TEXT=dark?'#ecf5ff':'#172f43',SUB=dark?'#b2cadb':'#587187',GRID=dark?'#314b63':'#dce6ec';
+  const BLUE='#36a4dd',MAGENTA='#c637a5',pad=w*.015,small=Math.max(12,Math.round(w*.0105)),norm=Math.max(14,Math.round(w*.012));
+  c.save();c.clearRect(0,0,w,h);c.fillStyle=BG;c.fillRect(0,0,w,h);
+  const font=(size,bold=false)=>`${bold?'bold ':''}${Math.round(size)}px Aptos, 'Segoe UI', Arial, sans-serif`;
+  const text=(str,x,y,size=norm,bold=false,col=TEXT)=>{c.font=font(size,bold);c.fillStyle=col;c.textBaseline='alphabetic';c.fillText(String(str),x,y)};
+  const line=(x1,y1,x2,y2,color=EDGE,width=1)=>{c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke()};
+  const panel=(x,y,ww,hh,title)=>{c.fillStyle=PANEL;c.fillRect(x,y,ww,hh);c.strokeStyle=EDGE;c.lineWidth=1.4;c.strokeRect(x,y,ww,hh);if(title){text(title,x+pad*.65,y+norm*1.55,norm,true);line(x+pad*.65,y+norm*1.85,x+ww-pad*.65,y+norm*1.85,EDGE)}};
+  const wrap=(content,maxWidth,size)=>{c.font=font(size);const words=String(content).split(/\s+/);let lines=[],row='';for(const word of words){const maybe=row?row+' '+word:word;if(c.measureText(maybe).width>maxWidth&&row){lines.push(row);row=word}else row=maybe}if(row)lines.push(row);return lines};
+  const paragraph=(content,x,y,maxWidth,size=small,leading=1.38,col=SUB,maxLines=99)=>{const ls=wrap(content,maxWidth,size);ls.slice(0,maxLines).forEach((v,i)=>text(v,x,y+i*size*leading,size,false,col));return y+Math.min(maxLines,ls.length)*size*leading};
+  const row=(label,value,x,y,ww,size=small)=>{text(label,x,y,size,false,SUB);c.font=font(size,true);let s=String(value);while(c.measureText(s).width>ww*.54&&s.length>3)s=s.slice(0,-2)+'…';c.fillStyle=TEXT;c.textAlign='right';c.fillText(s,x+ww,y);c.textAlign='left'};
+  const fmt=(v,d=2)=>Number.isFinite(v)?Number(v).toLocaleString('en-US',{maximumFractionDigits:d,minimumFractionDigits:d}):'—';
+  const active=current(),samples=result?result.samples:job?job.samples:[],mon=monitor(),mc=cell(mon.x,mon.y);
+  const peak=active?active.peak:0,maxScale=Math.max(1e-9,scaleMaximum());
+  const sourceString=sources.map((s,i)=>`${sourceLabel(i)}: Q ${fmt(s.q,0)} m³/d; C ${fmt(s.c,0)} mg/L; start ${fmt(s.start,0)} d; ${continuous?'continuous':fmt(s.duration,0)+' d'}`);
+  const title=exportModelTitle();
+  text(title,pad,h*.044,w*.018,true);
+  c.textAlign='right';text('Day '+fmt(frameDay,0)+' / '+END+' · '+(frameDay/365).toFixed(2)+' yr',w-pad,h*.044,w*.013,true,BLUE);c.textAlign='left';
+  c.textAlign='left';
+  if(intro){
+    const x=w*.065,y=h*.105,ww=w*.87,hh=h*.80;panel(x,y,ww,hh,'MODEL 4 — SIMULATION INPUTS');
+    text('Groundwater flow & contaminant transport',x+pad,y+h*.105,w*.027,true);
+    let yy=y+h*.165;
+    const infos=[`Domain 1,000 × 1,000 m  |  Grid ${N} × ${N}  |  Cell size ${DX} m  |  Total ${END} days`,
+      `Hydraulic conductivity K = ${p.K} m/day  |  Aquifer thickness = ${p.B} m  |  Storativity = ${p.S}`,
+      `Regional gradient = ${p.I}  |  Flow direction = ${p.A}°  |  Effective porosity = ${p.N}`,
+      `Longitudinal / transverse dispersivity = ${p.AL} / ${p.AT} m  |  Diffusion = ${p.DM} m²/day  |  Decay = ${p.Decay} day⁻¹`,
+      `Leak type: ${continuous?'continuous':'finite'}  |  Point and non-point contaminant sources: ${sources.length}`,
+      `Pumping wells: ${wells.map((v,i)=>`P${i+1} (${fmt(v.x,0)}, ${fmt(v.y,0)}) m; Q ${fmt(v.q,0)} m³/d`).join('  |  ')}`,
+      `Monitoring wells: ${monitors.map((v,i)=>`M${i+1} (${fmt(v.x,0)}, ${fmt(v.y,0)}) m`).join('  |  ')}`];
+    for(const item of infos){yy=paragraph(item,x+pad*1.2,yy,ww-pad*2.5,w*.013,1.38,TEXT)+h*.025}
+    text('SOURCE LOADING AND TIMING',x+pad*1.2,yy+h*.004,w*.014,true);yy+=h*.035;
+    for(const s of sourceString){yy=paragraph(s,x+pad*1.2,yy,ww-pad*2.4,w*.0128,1.3,TEXT)+h*.012}
+    text('Educational numerical model — inspect convergence and mass balance before engineering use.',x+pad*1.2,y+hh-h*.043,w*.011,false,SUB);
+    c.restore();return;
+  }
+  if(mode==='map'){
+    const bx=w*.08,by=h*.082,bw=w*.84,bh=h*.845;panel(bx,by,bw,bh,'MAIN SIMULATION · AQUIFER CONCENTRATION (mg/L)');
+    const sz=Math.min(bh-h*.14,bw-w*.16),xx=bx+(bw-sz-w*.07)*.5,yy=by+h*.072;
+    c.fillStyle='#eef7f3';c.fillRect(xx,yy,sz,sz);c.imageSmoothingEnabled=false;c.drawImage($('map'),xx,yy,sz,sz);c.imageSmoothingEnabled=true;
+    c.strokeStyle=EDGE;c.strokeRect(xx,yy,sz,sz);const gx=xx+sz+w*.023,gw=w*.018,gh=sz;
+    const grad=c.createLinearGradient(0,yy+gh,0,yy);
+    [['#e9f4ef',0],['#8bcac1',.25],['#eed36b',.5],['#eb8547',.75],['#af2647',1]].forEach(([v,t])=>grad.addColorStop(t,v));
+    c.fillStyle=grad;c.fillRect(gx,yy,gw,gh);c.strokeStyle=EDGE;c.strokeRect(gx,yy,gw,gh);
+    for(let i=0;i<=5;i++){const v=maxScale*i/5,py=yy+gh-gh*i/5;text(fmt(v,maxScale<10?2:1),gx+gw+w*.008,py+small*.35,small,false,TEXT)}
+    const ay=yy+gh-Math.max(0,Math.min(1,peak/maxScale))*gh;c.fillStyle='#dc213b';c.beginPath();c.moveTo(gx-w*.011,ay-w*.007);c.lineTo(gx-w*.011,ay+w*.007);c.lineTo(gx,ay);c.closePath();c.fill();
+    text('Current maximum concentration: '+fmt(peak,3)+' mg/L',bx+pad,by+bh-h*.027,w*.014,true);
+    c.textAlign='right';text('Cell size '+DX+' m · '+N+' × '+N+' grid',bx+bw-pad,by+bh-h*.027,w*.012,false,SUB);c.textAlign='left';
+    if(final){c.textAlign='right';text('FINAL STATE',w-pad,h*.973,w*.012,true,BLUE);c.textAlign='left'}
+    c.restore();return;
+  }
+  // Three-column export composition: map, data, one combined dual-axis chart per monitor.
+  const top=h*.084,bottom=h*.940,H=bottom-top;
+  const mapX=pad,mapW=w*.440,metricX=mapX+mapW+pad,metricW=w*.184,chartX=metricX+metricW+pad,chartW=w-chartX-pad;
+  panel(mapX,top,mapW,H,'AQUIFER CONCENTRATION (mg/L)');
+  // Preserve map canvas aspect ratio and reserve space for a separate legend.
+  const headerClearance=h*.063,footerClearance=h*.092;
+  const mapAvailableW=mapW-pad*2.5-w*.078;
+  const size=Math.max(80,Math.min(H-headerClearance-footerClearance,mapAvailableW));
+  const plotX=mapX+pad*.9+(mapAvailableW-size)/2;
+  const plotY=top+headerClearance+(H-headerClearance-footerClearance-size)/2;
+  c.fillStyle='#edf3f7';c.fillRect(plotX,plotY,size,size);
+  c.imageSmoothingEnabled=false;c.drawImage($('map'),plotX,plotY,size,size);c.imageSmoothingEnabled=true;
+  c.strokeStyle=EDGE;c.strokeRect(plotX,plotY,size,size);
+  const vx=plotX+size+w*.024,vy=plotY,vw=w*.019,vh=size;
+  const gradient=c.createLinearGradient(0,vy+vh,0,vy);
+  [['#e9f4ef',0],['#8bcac1',.25],['#eed36b',.5],['#eb8547',.75],['#af2647',1]].forEach(([v,t])=>gradient.addColorStop(t,v));
+  c.fillStyle=gradient;c.fillRect(vx,vy,vw,vh);c.strokeStyle=EDGE;c.strokeRect(vx,vy,vw,vh);
+  for(let i=0;i<=5;i++){
+    const iy=vy+vh-vh*i/5;
+    line(vx+vw,iy,vx+vw+w*.004,iy,SUB);
+    text(fmt(maxScale*i/5,maxScale<10?2:1),vx+vw+w*.009,iy+small*.36,small,false,TEXT);
+  }
+  const peakY=vy+vh-Math.max(0,Math.min(1,peak/maxScale))*vh;
+  c.fillStyle='#de2443';c.beginPath();c.moveTo(vx-w*.008,peakY-w*.007);
+  c.lineTo(vx-w*.008,peakY+w*.007);c.lineTo(vx,peakY);c.closePath();c.fill();
+  text('Current maximum: '+fmt(peak,3)+' mg/L',mapX+pad,top+H-h*.032,w*.013,true);
+  panel(metricX,top,metricW,H,'LIVE DASHBOARD · RESULTS');
+  const rx=metricX+pad*.78,rw=metricW-pad*1.56;
+  let ry=top+h*.074;
+  const section=(title)=>{text(title,rx,ry,w*.014,true,BLUE);ry+=h*.026;};
+  const item=(name,value)=>{row(name,value,rx,ry,rw,w*.0112);ry+=h*.029;};
+  const separator=()=>{ry+=h*.010;line(rx,ry-h*.004,rx+rw,ry-h*.004,EDGE);ry+=h*.019;};
+  section('SIMULATION');
+  item('Day',fmt(frameDay,0)+' / '+END);
+  item('Regional velocity',fmt(p.K*p.I/p.N,3)+' m/day');
+  item('Total pumping',fmt(wells.reduce((a,v)=>a+v.q,0),0)+' m³/day');
+
+  separator();section('MASS BALANCE (kg)');
+  for(const [name,k] of [['Injected','injected'],['Stored','stored'],['Extracted','extracted'],['Boundary export','boundary'],['Decayed','decayed'],['Residual','residual']])item(name,fmt(active?active[k]:0,2));
+  separator();section('LIVE DATA');
+  const details=[...wells.map((v,i)=>({tag:'P'+(i+1),x:v.x,y:v.y,q:fmt(v.q,0)+' m³/d'})),...monitors.map((v,i)=>({tag:'M'+(i+1),x:v.x,y:v.y,q:'Monitor'}))];
+  for(const v of details){
+    if(ry>top+H-h*.22)break;
+    const cv=active?active.c[cell(v.x,v.y)]:0;
+    text(v.tag+' ('+fmt(v.x,0)+', '+fmt(v.y,0)+')  ·  '+v.q,rx,ry,small*.94,true,TEXT);
+    text('C = '+fmt(cv,3)+' mg/L',rx,ry+h*.017,small*.88,false,SUB);
+    ry+=h*.048;
+  }
+  // Fixed input block at foot of the results panel. Wrap strings and avoid overlapping data.
+  const inputTop=Math.max(ry+h*.010,top+H-h*.19);
+  line(rx,inputTop-h*.02,rx+rw,inputTop-h*.02,EDGE);
+  text('MODEL INPUTS',rx,inputTop,w*.013,true,BLUE);
+  let iy=inputTop+h*.028;
+  const info=[`Grid ${N}×${N} (${DX} m) · K ${p.K} m/day · b ${p.B} m`,
+    `Gradient ${p.I} · θ ${p.A}° · n ${p.N} · S ${p.S}`,
+    `αL/αT ${p.AL}/${p.AT} m · Dm ${p.DM} · λ ${p.Decay}`,
+    `Sources: ${sources.map((s,i)=>sourceLabel(i)).join(', ')}`];
+  c.save();c.beginPath();c.rect(rx,iy-h*.015,rw,Math.max(0,top+H-h*.018-iy+h*.015));c.clip();
+  for(const t of info)iy=paragraph(t,rx,iy,rw,small*.86,1.22,SUB,2)+h*.006;
+  c.restore();
+  // The diagram column is drawn at native recording resolution (not copied from UI canvas).
+  // Video monitoring diagrams follow the currently selected UI theme.
+  // Standalone PNG/JPG and PDF diagram exports retain their independent light-mode style.
+  const diagramText=TEXT,diagramSub=SUB,diagramGrid=GRID;
+  c.fillStyle=PANEL;c.fillRect(chartX,top,chartW,H);
+  c.strokeStyle=EDGE;c.lineWidth=1.4;c.strokeRect(chartX,top,chartW,H);
+  c.font=font(norm,true);c.fillStyle=diagramText;c.textAlign='left';
+  c.fillText('MONITORING DIAGRAMS',chartX+pad*.65,top+norm*1.55);
+  line(chartX+pad*.65,top+norm*1.85,chartX+chartW-pad*.65,top+norm*1.85,EDGE);
+  const plotRecords=samples;
+  if(!monitors.length){
+    paragraph('Add a monitoring well to display concentration and hydraulic head against time.',chartX+pad,top+h*.13,chartW-2*pad,small,1.5,SUB);
+  } else {
+    const num=monitors.length;
+    const chartTop=top+h*.067,available=H-h*.086,gap=h*.022;
+    const slotH=(available-gap*(num-1))/num;
+    monitors.forEach((m,index)=>{
+      const cx=chartX+pad*.75,cw=chartW-pad*1.5,cy=chartTop+index*(slotH+gap);
+      text('M'+(index+1)+' · ('+Math.round(m.x)+', '+Math.round(m.y)+') m',cx,cy+small*.6,small*1.07,true,diagramText);
+      // Axis titles are drawn adjacent to their respective Y axes.
+      const left=cx+pad*2.05,right=cx+cw-pad*7.08,upper=cy+small*2.25,lower=cy+slotH-small*3.2;
+      if(right<=left||lower<=upper)return;
+      c.save();c.font=font(Math.max(12,w*.008),true);c.fillStyle=diagramSub;c.textAlign='center';c.textBaseline='middle';
+      c.translate(cx+Math.max(8,w*.0045),(upper+lower)/2);c.rotate(-Math.PI/2);c.fillText('Concentration (mg/L)',0,0);c.restore();
+      c.save();c.font=font(Math.max(12,w*.008),true);c.fillStyle=diagramSub;c.textAlign='center';c.textBaseline='middle';
+      c.translate(right+pad*2.25,(upper+lower)/2);c.rotate(Math.PI/2);c.fillText('Head (m)',0,0);c.restore();
+      c.save();c.font=font(Math.max(11,w*.007),true);c.fillStyle=diagramSub;c.textAlign='center';c.textBaseline='middle';c.translate(right+pad*4.62,(upper+lower)/2);c.rotate(Math.PI/2);c.fillText('Q (m³/day)',0,0);c.restore();
+      c.save();c.font=font(Math.max(11,w*.007),true);c.fillStyle=diagramSub;c.textAlign='center';c.textBaseline='middle';c.translate(right+pad*6.53,(upper+lower)/2);c.rotate(Math.PI/2);c.fillText('Mass (kg)',0,0);c.restore();
+      const k=cell(m.x,m.y),cc=plotRecords.map(z=>z.c[k]),hh=plotRecords.map(z=>z.h[k]);
+      const maxC=Math.max(.01,...cc)*1.08;
+      let minH=hh.length?Math.min(...hh):0,maxH=hh.length?Math.max(...hh):1;
+      if(maxH-minH<.01){minH-=.5;maxH+=.5}else{const d=(maxH-minH)*.08;minH-=d;maxH+=d}
+      const tickFont=Math.max(11,w*.0062);const totalQ=totalAt(frameDay),maxQ=Math.max(1,totalQ*1.12,...plotRecords.flatMap(z=>[...(z.rates||[]),(z.rates||[]).reduce((a,b)=>a+b,0)]).map(v=>v*1.12));
+      const displayed=monitorSeries().filter(s=>seriesEnabled(s.key));const maxMass=Math.max(1,...plotRecords.map(z=>Math.max(z.injected||0,z.extracted||0)))*1.08;
+      for(let j=0;j<=4;j++){
+        const y=lower-(lower-upper)*j/4;
+        line(left,y,right,y,diagramGrid,.9);
+        c.font=font(tickFont);c.fillStyle=diagramSub;c.textBaseline='middle';
+        c.textAlign='right';c.fillText(fmt(maxC*j/4,maxC<1?3:1),left-w*.004,y);
+        c.textAlign='left';c.fillText(fmt(minH+(maxH-minH)*j/4,2),right+w*.004,y);c.fillText(fmt(maxQ*j/4,0),right+pad*3.26,y);c.fillText(fmt(maxMass*j/4,0),right+pad*5.3,y);
+      }
+      c.textBaseline='alphabetic';
+      for(let j=0;j<=5;j++){
+        const x=left+(right-left)*j/5;
+        c.textAlign='center';text(j+'y',x,lower+small*1.2,tickFont,false,diagramSub);
+      }
+      c.textAlign='left';
+      const curve=(key,lo,hi,color)=>{
+        c.beginPath();let first=true;
+        for(const rec of plotRecords){const v=key==='c'?rec.c[k]:rec.h[k];if(!Number.isFinite(v))continue;
+          const x=left+(right-left)*rec.t/END,y=lower-(lower-upper)*(v-lo)/Math.max(1e-10,hi-lo);
+          if(first){c.moveTo(x,y);first=false}else c.lineTo(x,y);
+        }
+        c.strokeStyle=color;c.lineWidth=Math.max(2,w*.00155);c.stroke();
+      };
+      if(seriesEnabled('c'))curve('c',0,maxC,MAGENTA);if(seriesEnabled('h'))curve('h',minH,maxH,BLUE);
+      const rateLine=(getRate,color)=>{c.save();c.strokeStyle=color;c.lineWidth=Math.max(2,w*.0014);c.setLineDash([7,4]);c.beginPath();plotRecords.forEach((z,idx)=>{const yy=lower-(lower-upper)*getRate(z)/maxQ,xx=left+(right-left)*z.t/END;idx?c.lineTo(xx,yy):c.moveTo(xx,yy)});c.stroke();c.restore()};
+      wells.forEach((well,j)=>{if(seriesEnabled('p'+j))rateLine(z=>z.rates?.[j]??well.q,MONITOR_COLORS[2+j])});if(seriesEnabled('total'))rateLine(z=>(z.rates||wells.map(v=>v.q)).reduce((a,b)=>a+b,0),'#e6d04a');
+      const massLine=(value,color)=>{c.save();c.strokeStyle=color;c.lineWidth=Math.max(2,w*.0014);c.setLineDash([3,4]);c.beginPath();plotRecords.forEach((z,idx)=>{const yy=lower-(lower-upper)*value(z)/maxMass,xx=left+(right-left)*z.t/END;idx?c.lineTo(xx,yy):c.moveTo(xx,yy)});c.stroke();c.restore()};
+      sources.forEach((src,j)=>{if(seriesEnabled('inj'+j))massLine(z=>z.sourceInjected?.[j]||0,INJECTION_COLORS[j%INJECTION_COLORS.length])});
+      if(seriesEnabled('injTotal'))massLine(z=>z.injected||0,'#bd4951');
+      wells.forEach((well,j)=>{if(seriesEnabled('ext'+j))massLine(z=>z.wellExtracted?.[j]||0,EXTRACTION_COLORS[j%EXTRACTION_COLORS.length])});
+      if(seriesEnabled('extTotal'))massLine(z=>z.extracted||0,'#343c4c');
+      const tx=left+(right-left)*frameDay/END;
+      line(tx,upper,tx,lower,'#f4a64e',Math.max(1.5,w*.001));
+      let lx=cx,ly=cy+slotH-small*.75;c.font=font(Math.max(9,w*.0069));displayed.forEach(s=>{const tw=c.measureText(s.label).width+small*1.5;if(lx+tw>cx+cw){lx=cx;ly+=small*1.0}if(ly>cy+slotH+small*.92)return;c.fillStyle=s.color;c.fillRect(lx,ly-small*.52,small*.48,small*.38);text(s.label,lx+small*.60,ly,w*.0070,false,diagramSub);lx+=tw});
+      if(index<num-1)line(cx,cy+slotH+gap*.36,cx+cw,cy+slotH+gap*.36,'#cad9e5',1);
+    });
+  }
+  if(final){c.textAlign='right';text('FINAL STATE',w-pad,h*.977,w*.011,true,BLUE);c.textAlign='left'}
+  c.restore();
+}
+async function exportVideo(){if(recording)return;if(blockUnfinishedPolygon()){$('videoStatus').textContent='Close the unfinished non-point-source polygon before exporting.';return;}if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){$('videoStatus').textContent='Canvas recording is not supported by this browser.';return}if(!result||!result.samples.length||$('play').disabled){$('videoStatus').textContent='Finish numerical calculation before exporting.';return}const kind=$('videoType').value,seconds=+$('videoLength').value,width=+$('videoRes').value,height=Math.round(width*9/16),cv=document.createElement('canvas');cv.width=width;cv.height=height;const cx=cv.getContext('2d'),fps=20;const codecs=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];let mime=codecs.find(t=>MediaRecorder.isTypeSupported(t));if(!mime){$('videoStatus').textContent='WebM recording not supported.';return}recording=true;recordingCancel=false;$('exportVideo').disabled=true;$('cancelVideo').disabled=false;const originalDay=day,oldPlaying=playing;stop();try{videoStream=cv.captureStream(fps);let blobs=[];recorder=new MediaRecorder(videoStream,{mimeType:mime,videoBitsPerSecond:width===1920?5000000:2800000});recorder.ondataavailable=e=>{if(e.data.size)blobs.push(e.data)};const stopped=new Promise((resolve,reject)=>{recorder.onerror=e=>reject(e.error||new Error('Recorder failed'));recorder.onstop=resolve});recorder.start(1000);const total=5+seconds+3,started=performance.now();let prev=-1;while(!recordingCancel){const elapsed=(performance.now()-started)/1000;if(elapsed>=total)break;let t;if(elapsed<5)t=0;else if(elapsed<5+seconds)t=END*(elapsed-5)/seconds;else t=END;let frame=Math.floor(t/5)*5;if(frame!==prev){day=frame;$('time').value=frame;render();prev=frame}videoDraw(cx,width,height,t,kind,elapsed<5,elapsed>=5+seconds);$('videoStatus').textContent='Recording '+Math.floor(100*elapsed/total)+'% · '+kind+' · '+width+' × '+height;await sleep(1000/fps)}recorder.stop();await stopped;if(!recordingCancel){const blob=new Blob(blobs,{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=kind==='map'?exportModelFile('Main_Simulation','webm'):exportModelFile('Full_Dashboard','webm');a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);$('videoStatus').textContent='Video ready ('+(blob.size/1048576).toFixed(1)+' MB).'}else $('videoStatus').textContent='Recording cancelled.'}catch(e){$('videoStatus').textContent='Export error: '+e.message;try{if(recorder&&recorder.state!=='inactive')recorder.stop()}catch(_){}}finally{recording=false;$('exportVideo').disabled=false;$('cancelVideo').disabled=true;day=originalDay;$('time').value=day;render();if(videoStream)videoStream.getTracks().forEach(t=>t.stop())}}$('exportVideo').onclick=exportVideo;$('cancelVideo').onclick=()=>{recordingCancel=true};
+$('time').oninput=e=>{day=+e.target.value;render()};function animate(t){if(!playing)return;if(last!==null){day=Math.min(END,day+(t-last)/1000*Number($('speed').value));$('time').value=day;render()}last=t;if(day>=END)stop();else raf=requestAnimationFrame(animate)}$('play').onclick=()=>{if(blockUnfinishedPolygon())return;if(playing){stop();return}if(day>=END)day=0;playing=true;last=null;$('play').textContent='Ⅱ';raf=requestAnimationFrame(animate)};$('back').onclick=()=>{day=Math.max(0,day-30);$('time').value=day;render()};$('next').onclick=()=>{day=Math.min(END,day+30);$('time').value=day;render()};$('first').onclick=()=>{stop();day=0;$('time').value=0;render()};$('reset').onclick=()=>{clearTimeout(queueTimer);p={...defs};for(const k in p)if($(k))$(k).value=p[k];wells=[{x:650,y:590,q:450}];selected=0;pendingPlacement=null;source={x:230,y:410};sources=[{type:'point',x:230,y:410,q:20,c:500,start:0,duration:60}];activeSource=0;monitors=[{x:500,y:535}];selectedMonitor=0;polygon=[];poly=false;closed=false;continuous=false;day=120;$('time').value=120;setLeakMode(false,false);choose('source');labels();wellUI();monitorUI();sourceUI();compute()};window.addEventListener('resize',()=>{drawChart();drawHeadChart()});labels();wellUI();monitorUI();sourceUI();compute()
+
+$('addMapWell').onclick=()=>document.querySelector('[data-tool="well"]').click();$('addMapMonitor').onclick=()=>document.querySelector('[data-tool="monitor"]').click();
+
+
+// Multi-action edit history. Store model/editing state, not computed arrays or animation frames.
+// A drag or slider gesture is a single undoable operation.
+const undoHistory=[];
+const UNDO_LIMIT=80;
+let historyRestoring=false, historyGesture=null, lastHistoryAfter=null;
+function editSnapshot(){return {
+ p:{...p},variablePumping,periodCount,pumpingPeriods:JSON.parse(JSON.stringify(pumpingPeriods)),pumpingRates:JSON.parse(JSON.stringify(pumpingRates)),wells:JSON.parse(JSON.stringify(wells)),monitors:JSON.parse(JSON.stringify(monitors)),
+ sources:JSON.parse(JSON.stringify(sources)),selected,selectedMonitor,activeSource,
+ continuous,tool,pendingPlacement,DX,zoomMode,
+ manualViewport:manualViewport?{...manualViewport}:null,scaleMode
+};}
+function recordEdit(before){
+ if(historyRestoring||!before)return;
+ const after=editSnapshot(), a=JSON.stringify(after), b=JSON.stringify(before);
+ if(a===b||a===lastHistoryAfter)return;
+ undoHistory.push({before,after});if(undoHistory.length>UNDO_LIMIT)undoHistory.shift();
+ lastHistoryAfter=a;$('undo').disabled=false;
+}
+function undoLastAction(){
+ if(!undoHistory.length)return;
+ const entry=undoHistory.pop(),s=entry.before;
+ historyRestoring=true;
+ clearTimeout(queueTimer);
+ p={...s.p};variablePumping=!!s.variablePumping;periodCount=s.periodCount||2;pumpingPeriods=JSON.parse(JSON.stringify(s.pumpingPeriods||pumpingPeriods));pumpingRates=JSON.parse(JSON.stringify(s.pumpingRates||pumpingRates));wells=JSON.parse(JSON.stringify(s.wells));monitors=JSON.parse(JSON.stringify(s.monitors));
+ sources=JSON.parse(JSON.stringify(s.sources));selected=s.selected;selectedMonitor=s.selectedMonitor;
+ activeSource=s.activeSource;continuous=s.continuous;pendingPlacement=s.pendingPlacement;
+ manualViewport=s.manualViewport?{...s.manualViewport}:null;zoomMode=s.zoomMode;scaleMode=s.scaleMode;
+ if(DX!==s.DX){DX=s.DX;N=1000/DX;NN=N*N;}
+ $('gridSize').value=String(DX);
+ $('gridMeta').textContent='Domain: 1,000 × 1,000 m · Grid: '+N+' × '+N+' · Δx = Δy = '+DX+' m';
+ $('cellCount').textContent=NN.toLocaleString();
+ $('gridWarning').textContent=DX===5?'EXPERIMENTAL: 40,000 cells and 1,825 days; can take substantial time or exceed browser memory. Start with 25 m.':DX===10?'100 × 100 grid (10,000 cells): significantly slower than 25 m.':'40 × 40 grid (1,600 cells): recommended for responsive simulations.';
+ for(const k of Object.keys(p))if($(k))$(k).value=p[k];
+ $('finiteMode').classList.toggle('selected',!continuous);$('continuousMode').classList.toggle('selected',continuous);
+ $('finiteMode').setAttribute('aria-pressed',String(!continuous));$('continuousMode').setAttribute('aria-pressed',String(continuous));
+ for(const [id,on] of [['fixedScale',scaleMode==='fixed'],['currentScale',scaleMode==='current']]){$(id).classList.toggle('selected',on);$(id).setAttribute('aria-pressed',String(on));}
+ for(const [id,on] of [['fullExtent',zoomMode==='full'],['manualZoom',zoomMode==='manual'],['zoomExtents',zoomMode==='extents']])$(id).classList.toggle('selected',on);
+ zoomStart=null;zoomEnd=null;dragTarget=null;frozenMapViewport=null;
+ choose(s.tool);labels();wellUI();monitorUI();sourceUI();
+ historyRestoring=false;lastHistoryAfter=JSON.stringify(editSnapshot());
+ $('undo').disabled=!undoHistory.length;
+ if(blockUnfinishedPolygon())render();else compute();
+ $('hint').textContent='Undid the last editing action.';
+}
+$('undo').disabled=true;
+const excludedHistoryButtons=new Set(['undo','play','back','next','first','exportVideo','cancelVideo','theme']);
+function isEditableAction(e){
+ const t=e.target;
+ if(t.closest('.info-btn'))return false;
+ const b=t.closest('button');
+ if(b)return !excludedHistoryButtons.has(b.id)&&!b.disabled&&!!(b.id==='reset'||b.closest('.map-panel')||b.closest('.right'));
+ const input=t.closest('input,select');
+ return !!input&&!!input.closest('.right')&&input.id!=='time';
+}
+// Capture before the existing inline/event handlers change model parameters.
+document.addEventListener('click',e=>{
+ if(historyRestoring||!isEditableAction(e)||!e.target.closest('button'))return;
+ const before=editSnapshot();setTimeout(()=>recordEdit(before),0);
+},true);
+document.addEventListener('change',e=>{
+ if(historyRestoring||historyGesture||!isEditableAction(e)||e.target.closest('button'))return;
+ const before=editSnapshot();setTimeout(()=>recordEdit(before),0);
+},true);
+document.addEventListener('input',e=>{
+ if(historyRestoring||historyGesture||!isEditableAction(e)||e.target.closest('button'))return;
+ const before=editSnapshot();setTimeout(()=>recordEdit(before),0);
+},true);
+document.addEventListener('pointerdown',e=>{
+ if(historyRestoring)return;
+ if(e.target===map||e.target.closest('input[type="range"]')?.closest('.right')){
+  historyGesture={before:editSnapshot(),pointerId:e.pointerId};
+ }
+},true);
+document.addEventListener('pointerup',e=>{
+ if(!historyGesture||e.pointerId!==historyGesture.pointerId)return;
+ const before=historyGesture.before;historyGesture=null;
+ setTimeout(()=>recordEdit(before),0);
+},true);
+document.addEventListener('pointercancel',e=>{
+ if(!historyGesture||e.pointerId!==historyGesture.pointerId)return;
+ const before=historyGesture.before;historyGesture=null;
+ setTimeout(()=>recordEdit(before),0);
+},true);
+// Undo is available by Ctrl+Z / Cmd+Z unless editing text in an input.
+window.addEventListener('keydown',e=>{
+ if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!e.target.matches('input[type="text"],textarea,[contenteditable="true"]')){
+  e.preventDefault();undoLastAction();
+ }
+});
+
+$('variablePumping').addEventListener('click',()=>{const before=editSnapshot();variablePumping=!variablePumping;if(variablePumping){normalizeRates();}wellUI();recordEdit(before);queue()});pumpingScheduleUI();
+const tip=document.createElement('div');tip.className='tooltip-float';document.body.appendChild(tip);function showTip(el){tip.textContent=el.getAttribute('data-tip');tip.style.display='block';const r=el.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight;tip.style.left=Math.max(8,Math.min(innerWidth-w-8,r.right-w+10))+'px';tip.style.top=(r.bottom+h+8<innerHeight?r.bottom+5:Math.max(8,r.top-h-5))+'px'}document.querySelectorAll('.info-btn').forEach(el=>{el.addEventListener('mouseenter',()=>showTip(el));el.addEventListener('focus',()=>showTip(el));el.addEventListener('mouseleave',()=>tip.style.display='none');el.addEventListener('blur',()=>tip.style.display='none')});window.addEventListener('keydown',e=>{if(e.key==='Escape')tip.style.display='none'});
+
+
+// --- Model 4 v1.46: interoperable model exchange, scientific reporting, diagram export ---
+const IO_SCHEMA='PlayGroundWater-Model4-CSV-v1';
+function ioMessage(msg){$('dataIOStatus').textContent=msg;}
+function exportModelVersion(){const h=document.querySelector('.header h1');const m=(h?.textContent||'').match(/PlayGroundWater Model 4 v(\d+\.\d+)/);if(!m)throw Error('The model version could not be read from the header.');return 'v'+m[1];}
+function exportModelTitle(){const h=document.querySelector('.header h1');if(!h||!h.textContent.includes(exportModelVersion()))throw Error('The model title could not be read from the header.');return h.textContent.trim();}
+function exportModelFile(stem,extension){return 'PlayGroundWater_Model4_'+exportModelVersion()+'_'+stem+'.'+extension;}
+function downloadBlob(blob,name){const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),6000)}
+function csvCell(v){const x=String(v??'');return /[,\r\n"]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}
+function csvMake(rows){return '\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n')+'\r\n'}
+function csvParse(text){let out=[],row=[],value='',quoted=false;const src=text.replace(/^\ufeff/,'');for(let i=0;i<src.length;i++){const c=src[i];if(quoted){if(c==='"'&&src[i+1]==='"'){value+='"';i++}else if(c==='"')quoted=false;else value+=c}else if(c==='"')quoted=true;else if(c===','){row.push(value);value=''}else if(c==='\n'||c==='\r'){if(c==='\r'&&src[i+1]==='\n')i++;row.push(value);if(row.some(v=>v.trim()))out.push(row);row=[];value=''}else value+=c}if(quoted)throw Error('Unclosed CSV quotation');if(value||row.length){row.push(value);out.push(row)}return out}
+function modelRows(template=false){
+ const rows=[['section','id','field','value','min','max','description']];
+ const add=(section,id,field,value,min='',max='',description='')=>rows.push([section,id,field,value,min,max,description]);
+ add('meta','model','schema',IO_SCHEMA,'','','DO NOT EDIT the schema identifier');
+ add('model','global','duration_days',END,END,END,'Simulation duration, days');
+ add('model','global','cell_size_m',DX,5,25,'Allowed: 5, 10, 25 m');
+ add('model','global','variable_pumping',variablePumping?1:0,0,1,'1 variable stress-period rates; 0 constant');
+ add('model','global','stress_period_count',periodCount,1,5,'Consecutive stress periods, up to 5');
+ add('model','global','continuous_leak',continuous?1:0,0,1,'1 continuous, 0 finite leak (per-source start and duration)');
+ for(const [key,min,max,desc] of [['K',1,100,'Hydraulic conductivity (m/day)'],['I',0,.01,'Hydraulic gradient'],['A',0,360,'Regional flow angle (degrees)'],['B',5,100,'Aquifer thickness (m)'],['N',.01,.5,'Effective porosity'],['S',.00001,.1,'Storativity'],['AL',0,300,'Longitudinal dispersivity (m)'],['AT',0,100,'Transverse dispersivity (m)'],['DM',0,1,'Molecular diffusion (m2/day)'],['Decay',0,1,'Decay coefficient (day-1)']])add('aquifer','global',key,p[key],min,max,desc);
+ for(let j=0;j<periodCount;j++){
+   const end=j===periodCount-1?END:pumpingPeriods[j].end;
+   const start=j? pumpingPeriods[j-1].end:0;
+   if(!Number.isInteger(end)||end<=start||end>END)throw Error('Invalid stress-period boundary at SP'+(j+1)+': end day '+end+' must be greater than '+start+'. Correct the schedule before exporting.');
+ }
+ for(let j=0;j<5;j++)add('stress',j+1,'end_day',j>=periodCount-1?END:pumpingPeriods[j].end,1,END,'End day of this stress period; first begins at day 0');
+ for(let i=0;i<(template?4:wells.length);i++){
+  const w=wells[i]||{x:200+150*i,y:650,q:0},id=i+1,enabled=i<wells.length;
+  add('pump',id,'enabled',enabled?1:0,0,1,'Max 4; at least one enabled');
+  add('pump',id,'x_m',w.x,0,1000,'Well X coordinate (m)');add('pump',id,'y_m',w.y,0,1000,'Well Y coordinate (m)');
+  add('pump',id,'constant_q_m3_day',w.q,0,3000,'Constant extraction rate, when variable_pumping=0');
+  for(let j=0;j<5;j++)add('pump',id,'stress_'+(j+1)+'_q_m3_day',pumpingRates[i]?.[j]??w.q,0,3000,'Extraction rate for stress period '+(j+1));
+ }
+ for(let i=0;i<(template?2:monitors.length);i++){
+  const m=monitors[i]||{x:400+i*90,y:500},id=i+1;
+  add('monitor',id,'enabled',i<monitors.length?1:0,0,1,'Max 2; at least one enabled');
+  add('monitor',id,'x_m',m.x,0,1000,'Observation well X (m)');add('monitor',id,'y_m',m.y,0,1000,'Observation well Y (m)');
+ }
+ const extras=[{type:'point',x:300,y:350,q:0,c:0,start:0,duration:60},{type:'polygon',x:600,y:400,q:0,c:0,start:0,duration:60,closed:true,vertices:[{x:570,y:370},{x:640,y:370},{x:605,y:430}]}];
+ for(let i=0;i<(template?3:sources.length);i++){
+  const o=sources[i]||extras[(i-sources.length)%extras.length],id=i+1;add('source',id,'enabled',i<sources.length?1:0,0,1,'Max 3 sources, PS or NPS');
+  add('source',id,'type',o.type,'','','point = PS, polygon = NPS');
+  add('source',id,'x_m',o.x||0,0,1000,'Point source X; NPS centroid optional');add('source',id,'y_m',o.y||0,0,1000,'Point source Y');
+  add('source',id,'leak_q_m3_day',o.q,0,100,'Source rate; app maximum 100');add('source',id,'concentration_mg_L',o.c,0,1000,'Source contaminant concentration');
+  add('source',id,'start_day',o.start||0,0,END,'Per-source start day');add('source',id,'duration_days',o.duration??60,0,END,'Per-source finite leak duration');
+  const vv=o.vertices||[];add('source',id,'polygon_vertices',vv.map(v=>Number(v.x).toFixed(3)+':'+Number(v.y).toFixed(3)).join('|'),'','','NPS only: x:y|x:y|x:y; 3 or more vertices');
+ }
+ return rows;
+}
+function exportInputs(template=false){try{const rows=modelRows(true),csv=csvMake(rows);if(rows.length<10)throw Error('The model input table is incomplete.');downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),template?exportModelFile('Default_Template','csv'):exportModelFile('Inputs','csv'));ioMessage((template?'Default CSV template':'Current model input CSV')+' download requested ('+rows.length+' rows). Check your browser Downloads folder.');}catch(error){const msg='CSV export failed: '+(error?.message||String(error));ioMessage(msg);alert(msg);}}
+function validateCSV(rows){
+ if(rows.length<5||rows[0].slice(0,4).join('|').toLowerCase()!=='section|id|field|value')throw Error('Incorrect CSV header. Use the generated PlayGroundWater Model 4 CSV template.');
+ const sections=new Map();for(const r of rows.slice(1)){if(r.length<4)throw Error('CSV row is missing one or more fields');const section=r[0].trim(),id=r[1].trim(),field=r[2].trim(),value=r[3].trim();if(!sections.has(section))sections.set(section,new Map());const key=id+'|'+field;if(sections.get(section).has(key))throw Error('Duplicate CSV field '+section+'/'+key);sections.get(section).set(key,value)}
+ const get=(section,id,field,required=true)=>{const v=sections.get(section)?.get(String(id)+'|'+field);if(required&&v===undefined)throw Error('Missing '+section+' '+id+' '+field);return v};
+ if(get('meta','model','schema')!==IO_SCHEMA)throw Error('CSV schema mismatch: generate the current Model 4 template');
+ function num(section,id,field,lo,hi){const raw=get(section,id,field),v=Number(raw);if(raw===undefined||raw===''||!Number.isFinite(v)||v<lo||v>hi)throw Error(section+' '+id+' '+field+' must be between '+lo+' and '+hi);return v}
+ const grid=num('model','global','cell_size_m',5,25);if(![5,10,25].includes(grid))throw Error('Cell size must be 5, 10, or 25 m');
+ const duration=num('model','global','duration_days',END,END);const variable=!!num('model','global','variable_pumping',0,1),count=num('model','global','stress_period_count',1,5);if(!Number.isInteger(count))throw Error('Stress period count must be an integer');
+ const con=!!num('model','global','continuous_leak',0,1);
+ const param={};for(const [key,min,max] of [['K',1,100],['I',0,.01],['A',0,360],['B',5,100],['N',.01,.5],['S',.00001,.1],['AL',0,300],['AT',0,100],['DM',0,1],['Decay',0,1]])param[key]=num('aquifer','global',key,min,max);
+ const periods=[];for(let j=0;j<5;j++)periods.push({end:num('stress',j+1,'end_day',1,END)});
+ for(let j=0;j<count;j++){if(j&&periods[j].end<=periods[j-1].end)throw Error('SP'+(j+1)+' ends on day '+periods[j].end+' but SP'+j+' ends on day '+periods[j-1].end+'. Set each subsequent end day later than the previous period (and SP'+count+' to day '+END+').');}if(periods[count-1].end!==END)throw Error('Last enabled stress period must end at day 1825');
+ const pw=[],pr=[];for(let i=1;i<=4;i++){const enabled=num('pump',i,'enabled',0,1);const x=num('pump',i,'x_m',0,1000),y=num('pump',i,'y_m',0,1000),q=num('pump',i,'constant_q_m3_day',0,3000);const rates=[];for(let j=1;j<=5;j++)rates.push(num('pump',i,'stress_'+j+'_q_m3_day',0,3000));if(enabled){pw.push({x,y,q});pr.push(rates)}}if(!pw.length)throw Error('Enable at least one pumping well');
+ const mon=[];for(let i=1;i<=2;i++){const enabled=num('monitor',i,'enabled',0,1),x=num('monitor',i,'x_m',0,1000),y=num('monitor',i,'y_m',0,1000);if(enabled)mon.push({x,y})}if(!mon.length)throw Error('Enable at least one monitoring well');
+ const so=[];for(let i=1;i<=3;i++){
+  const enabled=num('source',i,'enabled',0,1),type=get('source',i,'type');if(!['point','polygon'].includes(type))throw Error('Source '+i+' type must be point or polygon');
+  const x=num('source',i,'x_m',0,1000),y=num('source',i,'y_m',0,1000),q=num('source',i,'leak_q_m3_day',0,100),c=num('source',i,'concentration_mg_L',0,1000),start=num('source',i,'start_day',0,END),d=num('source',i,'duration_days',0,END),str=get('source',i,'polygon_vertices',false)||'';
+  if(start+d>END&&!con&&enabled)throw Error('Source '+i+' start + duration exceeds 1825 days');
+  let vertices=[];if(str){vertices=str.split('|').map(t=>{const a=t.split(':');if(a.length!==2||a.some(v=>!v.trim()||!Number.isFinite(Number(v))||Number(v)<0||Number(v)>1000))throw Error('Invalid polygon vertex for source '+i);return{x:Number(a[0]),y:Number(a[1])}})}
+  if(enabled){if(type==='polygon'&&vertices.length<3)throw Error('NPS'+i+' requires at least three polygon vertices');so.push(type==='polygon'?{type,x,y,q,c,start,duration:d,vertices,closed:true}:{type,x,y,q,c,start,duration:d})}
+ }
+ return {grid,param,variable,count,con,periods,pw,pr,mon,so};
+}
+function applyImportedCSV(data){
+ const before=editSnapshot();stop();++run;clearTimeout(queueTimer);
+ DX=data.grid;N=1000/DX;NN=N*N;p={...p,...data.param};variablePumping=data.variable;periodCount=data.count;pumpingPeriods=data.periods;pumpingRates=data.pr;wells=data.pw;monitors=data.mon;sources=data.so;continuous=data.con;selected=0;selectedMonitor=0;activeSource=sources.length?0:-1;tool='none';pendingPlacement=null;dragTarget=null;polygon=[];poly=false;closed=false;day=0;result=null;job=null;globalMax=0;fixedMax=1;
+ $('gridSize').value=DX;$('gridMeta').textContent='Domain: 1,000 × 1,000 m · Grid: '+N+' × '+N+' · Δx = Δy = '+DX+' m';$('cellCount').textContent=NN.toLocaleString();
+ $('gridWarning').textContent=DX===5?'EXPERIMENTAL: 40,000 cells and 1,825 days; computationally demanding.':DX===10?'100 × 100 cells: slower than 25 m':'40 × 40 cells: recommended';
+ for(const k of Object.keys(data.param))if($(k))$(k).value=p[k];labels();wellUI();monitorUI();sourceUI();pumpingScheduleUI();
+ $('finiteMode').classList.toggle('selected',!continuous);$('continuousMode').classList.toggle('selected',continuous);
+ recordEdit(before);render();queue();
+}
+$('importData').onclick=()=>{$('importDialog').hidden=false};$('importCancel').onclick=()=>{$('importDialog').hidden=true};
+$('importNo').onclick=()=>{$('importDialog').hidden=true;exportInputs(true)};
+$('importYes').onclick=()=>{$('importDialog').hidden=true;$('importDataFile').value='';$('importDataFile').click()};
+function showImportError(reason){const detail='The selected file could not be imported.\n\nReason: '+reason+'\n\nUse Export inputs CSV or the default filled CSV template to generate a compatible file.';ioMessage(detail+'\nYour current model data were preserved.');$('importErrorDetail').textContent=detail;$('importErrorDialog').hidden=false;} $('importErrorClose').onclick=()=>{$('importErrorDialog').hidden=true;}; $('importDataFile').onchange=async(e)=>{const f=e.target.files?.[0];if(!f)return;if(!/\.csv$/i.test(f.name)){showImportError('Only CSV files are supported. Please select a .csv file generated using the Model 4 CSV format.');return}try{const rows=csvParse(await f.text());const data=validateCSV(rows);applyImportedCSV(data);ioMessage('Imported '+f.name+' successfully. Simulation recalculation started.')}catch(err){showImportError(err?.message||'Unable to read the selected file. Check its CSV format and content.');}};
+$('exportInputs').onclick=()=>exportInputs(false);
+$('exportData').onclick=()=>{$('reportDialogStatus').textContent='';$('reportDialog').hidden=false};$('reportDialogClose').onclick=()=>{$('reportDialog').hidden=true};
+function resultsForReport(){
+ if(!result||!result.samples?.length||job?.time<END)throw Error('Complete the five-year simulation before exporting results.');
+ const arr=result.samples,last=arr[arr.length-1];if(last.t<END)throw Error('Results are incomplete ('+last.t+' / '+END+' days).');
+ const peakFor=(point)=>{let max=0,when=0;const k=cell(point.x,point.y);for(const r of arr){if(r.c[k]>max){max=r.c[k];when=r.t}}return{max,when}};
+ let aquiferMax=0,when=0,where={x:0,y:0};for(const r of arr){if(r.peak>aquiferMax){aquiferMax=r.peak;when=r.t;let k=0;for(let i=0;i<r.c.length;i++)if(r.c[i]>r.c[k])k=i;where={x:(k%N+.5)*DX,y:(Math.floor(k/N)+.5)*DX}}}
+ return {arr,last,aquiferMax,when,where,well:wells.map((w,i)=>({...w,...peakFor(w),extracted:last.wellExtracted?.[i]??0})),monitor:monitors.map(m=>({...m,...peakFor(m)})),source:sources.map((o,i)=>({...o,injected:last.sourceInjected?.[i]??0}))};
+}
+function reportTables(){const r=resultsForReport(),tables=[];const fmt=x=>Number(x).toFixed(3);
+ const table=(name,header,rows)=>tables.push({name,header,rows});
+ table('Model & aquifer parameters',['Parameter','Value'],[['Simulation duration','1825 days'],['Domain','1000 × 1000 m'],['Cell size',DX+' m'],['Grid',N+' × '+N],['Pumping mode',variablePumping?'Variable':'Constant'],['Leak mode',continuous?'Continuous':'Finite'],...Object.entries(p).filter(([k])=>['K','I','A','B','N','S','AL','AT','DM','Decay'].includes(k)).map(([k,v])=>[k,String(v)])]);
+ table('Pumping wells',['Well','X (m)','Y (m)','Constant Q (m³/d)','Extracted (kg)','Max C (mg/L)','Peak day'],r.well.map((w,i)=>['P'+(i+1),fmt(w.x),fmt(w.y),fmt(w.q),fmt(w.extracted),fmt(w.max),w.when]));
+ table('Monitoring wells',['Monitor','X (m)','Y (m)','Max C (mg/L)','Peak day'],r.monitor.map((m,i)=>['M'+(i+1),fmt(m.x),fmt(m.y),fmt(m.max),m.when]));
+ table('Contaminant sources',['Source','Type','Location / polygon vertices','Leak Q','C (mg/L)','Start','Duration','Injected (kg)'],r.source.map((s,i)=>[sourceLabel(i),s.type,s.type==='polygon'?(s.vertices||[]).map(v=>fmt(v.x)+':'+fmt(v.y)).join(' | '):fmt(s.x)+', '+fmt(s.y),fmt(s.q),fmt(s.c),s.start||0,s.duration||0,fmt(s.injected)]));
+ table('Stress periods',['Period','Start day','End day',...wells.map((_,i)=>'P'+(i+1)+' Q (m³/d)')],Array.from({length:variablePumping?periodCount:1},(_,j)=>[j+1,j===0?0:pumpingPeriods[j-1].end,variablePumping?pumpingPeriods[j].end:END,...wells.map((w,i)=>variablePumping?pumpingRates[i][j]:w.q)]));
+ table('Final contaminant mass balance',['Metric','Value (kg)'],['injected','stored','extracted','boundary','decayed','residual'].map(k=>[k,fmt(r.last[k])]));
+ table('Maximum aquifer concentration',['Value','X (m)','Y (m)','Day'],[[fmt(r.aquiferMax),fmt(r.where.x),fmt(r.where.y),r.when]]);
+ table('Time-series mass balance',['Day','Injected kg','Stored kg','Extracted kg','Boundary kg','Decayed kg','Residual kg'],r.arr.map(v=>[v.t,...['injected','stored','extracted','boundary','decayed','residual'].map(k=>fmt(v[k]))]));
+ table('Monitoring time series',['Day',...monitors.flatMap((m,i)=>['M'+(i+1)+' C mg/L','M'+(i+1)+' head m']),...wells.map((w,i)=>'P'+(i+1)+' Q m³/d'),'Total Q m³/d'],r.arr.map(v=>[v.t,...monitors.flatMap(m=>[fmt(v.c[cell(m.x,m.y)]),fmt(v.h[cell(m.x,m.y)])]),...wells.map((w,i)=>v.rates?.[i]??w.q),(v.rates||wells.map(w=>w.q)).reduce((a,b)=>a+b,0)]));
+ return tables;
+}
+function xmlSafe(x){return String(x??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;')}
+function zipMake(files){const enc=new TextEncoder();let local=[],central=[],offset=0;const crc32=(buf)=>{let c=0xFFFFFFFF;for(const b of buf){c^=b;for(let k=0;k<8;k++)c=(c>>>1)^((c&1)?0xEDB88320:0)}return (c^0xFFFFFFFF)>>>0};const write16=(a,n)=>{a.push(n&255,(n>>>8)&255)},write32=(a,n)=>{write16(a,n&65535);write16(a,n>>>16)};
+ for(const [name,content] of files){const filename=enc.encode(name),data=enc.encode(content),crc=crc32(data),h=[];write32(h,0x04034b50);write16(h,20);write16(h,0x0800);write16(h,0);write16(h,0);write16(h,0);write32(h,crc);write32(h,data.length);write32(h,data.length);write16(h,filename.length);write16(h,0);local.push(new Uint8Array(h),filename,data);const ch=[];write32(ch,0x02014b50);write16(ch,20);write16(ch,20);write16(ch,0x0800);write16(ch,0);write16(ch,0);write16(ch,0);write32(ch,crc);write32(ch,data.length);write32(ch,data.length);write16(ch,filename.length);write16(ch,0);write16(ch,0);write16(ch,0);write16(ch,0);write32(ch,0);write32(ch,offset);central.push(new Uint8Array(ch),filename);offset+=h.length+filename.length+data.length}
+ const cdStart=offset,cdSize=central.reduce((a,b)=>a+b.length,0),end=[];write32(end,0x06054b50);write16(end,0);write16(end,0);write16(end,files.length);write16(end,files.length);write32(end,cdSize);write32(end,cdStart);write16(end,0);return new Blob([...local,...central,new Uint8Array(end)],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+}
+function exportXlsx(){const tables=reportTables(),files=[];const xlCol=n=>{let r='';while(n){n--;r=String.fromCharCode(65+n%26)+r;n=Math.floor(n/26)}return r};
+ files.push(['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+tables.map((_,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+'</Types>']);
+ files.push(['_rels/.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>']);
+ files.push(['xl/workbook.xml','<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+tables.map((t,i)=>'<sheet name="'+xmlSafe(t.name.slice(0,31))+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+'</sheets></workbook>']);
+ files.push(['xl/_rels/workbook.xml.rels','<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+tables.map((t,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')+'</Relationships>']);
+ for(let i=0;i<tables.length;i++){const t=tables[i],all=[t.header,...t.rows],rows=all.map((r,ri)=>'<row r="'+(ri+1)+'">'+r.map((v,ci)=>{const n=Number(v),numeric=String(v).trim()!==''&&Number.isFinite(n);return '<c r="'+xlCol(ci+1)+(ri+1)+'"'+(numeric?'':' t="inlineStr"')+'>'+(numeric?'<v>'+n+'</v>':'<is><t>'+xmlSafe(v)+'</t></is>')+'</c>'}).join('')+'</row>').join('');files.push(['xl/worksheets/sheet'+(i+1)+'.xml','<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>'+rows+'</sheetData></worksheet>'])}
+ downloadBlob(zipMake(files),exportModelFile('Results','xlsx'));ioMessage('Excel report exported.');
+}
+function pdfReport(){
+ const tables=reportTables(),pages=[],W=1240,H=1754;
+ let page,ctx,pageNo=0,y;
+ const LEFT=55, RIGHT=W-55, CW=RIGHT-LEFT, BOTTOM=H-88;
+ function newPage(){
+  page=document.createElement('canvas');page.width=W;page.height=H;ctx=page.getContext('2d');
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#123652';ctx.textAlign='left';ctx.font='bold 26px Arial';ctx.fillText(exportModelTitle(),LEFT,65);
+  ctx.font='16px Arial';ctx.fillStyle='#146b9b';ctx.fillText('created by Dr Yiannis Kontos',LEFT,95);
+  ctx.fillText('PlayGroundWater Model 4 is available at https://ykontos.github.io/PlayGroundWater/Model4/index.html',LEFT,125);
+  pageNo++;ctx.textAlign='right';ctx.fillStyle='#123652';ctx.fillText('Page '+pageNo,RIGHT,H-38);ctx.textAlign='left';
+  y=164;pages.push(page);
+ }
+ function paragraph(text,bold=false){
+  if(y>H-80)newPage();ctx.fillStyle='#1d3342';ctx.font=(bold?'bold ':'')+'17px Arial';
+  let output='';for(const word of String(text).split(' ')){
+   if(ctx.measureText(output+' '+word).width>CW){ctx.fillText(output,LEFT,y);y+=25;output=word}else output+=(output?' ':'')+word;
+  }if(output)ctx.fillText(output,LEFT,y);y+=25;
+ }
+ function columnsFor(table){
+  const n=table.header.length;
+  // Reserve extra width for identifying labels, long polygon geometries and descriptions.
+  const weights=table.header.map((h,i)=>{
+   const k=String(h).toLowerCase();
+   if(/location|polygon|vertices/.test(k))return 2.55;
+   if(n===2 && i===0)return 1.65;
+   if(/parameter|metric|source|monitor|well|period/.test(k))return 1.30;
+   return 1;
+  });
+  const sum=weights.reduce((a,b)=>a+b,0);
+  const widths=weights.map(w=>CW*w/sum);
+  const xs=[LEFT];widths.forEach(w=>xs.push(xs[xs.length-1]+w));
+  return {widths,xs};
+ }
+ function wrapCell(v,width,fontPx){
+  const value=String(v??''); ctx.font=fontPx+'px Arial';
+  const max=Math.max(12,width-12);
+  const lines=[];let line='';
+  // Break on spaces when possible, and split long tokens when necessary.
+  for(const token of value.split(/(\s+)/)){
+   if(!token)continue;
+   if(ctx.measureText(line+token).width<=max){line+=token;continue}
+   if(line.trim()){lines.push(line.trim());line=''}
+   if(ctx.measureText(token).width<=max){line=token.trimStart();continue}
+   for(const ch of token){if(ctx.measureText(line+ch).width>max&&line){lines.push(line);line=''}line+=ch}
+  }
+  if(line.trim()||!lines.length)lines.push(line.trim());
+  return lines;
+ }
+ function drawTable(t){
+  const {widths,xs}=columnsFor(t),n=t.header.length;
+  const font=n>=9?12:n>=7?13:n>=5?14:16;
+  const leading=font+5, minH=font+17;
+  function header(){
+   const wrapped=t.header.map((h,i)=>wrapCell(h,widths[i],font));
+   const rowH=Math.max(36,...wrapped.map(a=>a.length*leading+12));
+   if(y+rowH>BOTTOM)newPage();
+   ctx.fillStyle='#164b70';ctx.fillRect(LEFT,y,CW,rowH);
+   ctx.strokeStyle='#9db6c8';ctx.lineWidth=1;
+   for(let i=0;i<n;i++){
+    ctx.strokeRect(xs[i],y,widths[i],rowH);
+    ctx.fillStyle='#fff';ctx.font='bold '+font+'px Arial';
+    wrapped[i].forEach((line,j)=>ctx.fillText(line,xs[i]+6,y+8+font+j*leading));
+   }
+   y+=rowH;
+  }
+  if(y+90>BOTTOM)newPage();
+  y+=15;paragraph(t.name,true);
+  header();
+  const limit=t.name.toLowerCase().includes('time series')?24:1000;
+  const rows=t.rows.slice(0,limit);
+  rows.forEach((r,ri)=>{
+   const wrapped=t.header.map((_,i)=>wrapCell(r[i]??'',widths[i],font));
+   const needed=Math.max(minH,...wrapped.map(a=>a.length*leading+11));
+   if(y+needed>BOTTOM){newPage();paragraph(t.name+' (continued)',true);header()}
+   ctx.fillStyle=ri%2===0?'#eef5f9':'#fff';ctx.fillRect(LEFT,y,CW,needed);
+   ctx.lineWidth=.8;ctx.strokeStyle='#b7c9d4';ctx.fillStyle='#203d52';ctx.font=font+'px Arial';
+   for(let i=0;i<n;i++){
+    ctx.strokeRect(xs[i],y,widths[i],needed);
+    wrapped[i].forEach((line,j)=>ctx.fillText(line,xs[i]+6,y+7+font+j*leading));
+   }
+   y+=needed;
+  });
+  if(t.rows.length>limit){if(y+40>BOTTOM)newPage();y+=10;paragraph('Additional '+(t.rows.length-limit)+' rows are included in the Excel export.');}
+  y+=12;
+ }
+ newPage();paragraph('Input parameters, model configuration, time histories and results',true);
+ for(const t of tables)drawTable(t);
+ document.querySelectorAll('#monitorCharts .monitor-combined-canvas').forEach((chart,i)=>{
+  newPage();paragraph('M'+(i+1)+' — Concentration, head, pumping and injected mass',true);
+  // Draw the PDF's figure using light-mode colors regardless of the UI theme.
+  const figure=document.createElement('canvas');figure.width=1700;figure.height=550;
+  const fctx=figure.getContext('2d');fctx.fillStyle='#ffffff';fctx.fillRect(0,0,figure.width,figure.height);
+  drawCombinedMonitorCharts({index:i,canvas:figure,scale:2,lightMode:true});
+  ctx.drawImage(figure,60,y,W-120,530);y+=548;
+  // Legend is explicitly composed into the PDF page, independently of the
+  // interactive dashboard checkbox controls (which are not part of a PDF).
+  // Include only the curves actually visible in the exported diagram.
+  const legendItems=monitorSeries().filter(item=>seriesEnabled(item.key));
+  const startX=LEFT+14, maxX=RIGHT-14, lineHeight=30;
+  let legendX=startX;
+  ctx.font='15px Arial';ctx.textAlign='left';
+  for(const item of legendItems){
+   const itemWidth=Math.ceil(ctx.measureText(item.label).width)+48;
+   if(legendX+itemWidth>maxX){legendX=startX;y+=lineHeight}
+   if(y+lineHeight>BOTTOM){newPage();paragraph('M'+(i+1)+' — diagram legend (continued)',true);legendX=startX}
+   ctx.strokeStyle=item.color;ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(legendX,y-5);ctx.lineTo(legendX+23,y-5);ctx.stroke();
+   ctx.fillStyle='#203d52';ctx.fillText(item.label,legendX+29,y);
+   legendX+=itemWidth;
+  }
+  y+=lineHeight;
+ });
+ // PDF with JPEG image XObjects: generated offline without external dependencies.
+ const enc=new TextEncoder(), parts=[],ofs=[0];let length=0;function write(v){const b=typeof v==='string'?enc.encode(v):v;parts.push(b);length+=b.length}function obj(id,content){ofs[id]=length;write(id+' 0 obj\n');write(content);write('\nendobj\n')}write('%PDF-1.4\n');const n=2+pages.length*5;obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Kids ['+pages.map((_,i)=>3+i*5+' 0 R').join(' ')+'] /Count '+pages.length+' >>');
+ for(let i=0;i<pages.length;i++){const pg=3+i*5,im=pg+1,contentId=pg+2,authorLink=pg+3,modelLink=pg+4;obj(pg,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im'+i+' '+im+' 0 R >> >> /Contents '+contentId+' 0 R /Annots ['+authorLink+' 0 R '+modelLink+' 0 R] >>');const dataUrl=pages[i].toDataURL('image/jpeg',.88).split(',')[1];const binary=atob(dataUrl),bytes=new Uint8Array(binary.length);for(let j=0;j<binary.length;j++)bytes[j]=binary.charCodeAt(j);ofs[im]=length;write(im+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+W+' /Height '+H+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+bytes.length+' >>\nstream\n');write(bytes);write('\nendstream\nendobj\n');const ops='q 595 0 0 842 0 0 cm /Im'+i+' Do Q\n';obj(contentId,'<< /Length '+enc.encode(ops).length+' >>\nstream\n'+ops+'endstream');
+ // These are real PDF URI annotations, not merely link-colored raster text.
+ const sx=595/W, sy=842/H;
+ function rect(x1,y1,x2,y2){return '['+[x1*sx,(H-y2)*sy,x2*sx,(H-y1)*sy].map(v=>v.toFixed(2)).join(' ')+']'}
+ obj(authorLink,'<< /Type /Annot /Subtype /Link /Rect '+rect(55,78,300,101)+' /Border [0 0 0] /A << /S /URI /URI (https://linktr.ee/ykontos) >> >>');
+ obj(modelLink,'<< /Type /Annot /Subtype /Link /Rect '+rect(55,108,1010,132)+' /Border [0 0 0] /A << /S /URI /URI (https://ykontos.github.io/PlayGroundWater/Model4/index.html) >> >>');
+ }
+ const start=length;write('xref\n0 '+(n+1)+'\n0000000000 65535 f \n');for(let i=1;i<=n;i++)write(String(ofs[i]).padStart(10,'0')+' 00000 n \n');write('trailer\n<< /Size '+(n+1)+' /Root 1 0 R >>\nstartxref\n'+start+'\n%%EOF');downloadBlob(new Blob(parts,{type:'application/pdf'}),exportModelFile('Report','pdf'));ioMessage('PDF report generated and downloaded.');}
+$('exportExcel').onclick=()=>{try{exportXlsx()}catch(e){ioMessage('Excel export: '+e.message)}};
+$('reportExcelChoice').onclick=()=>{try{exportXlsx();$('reportDialogStatus').textContent='Excel download requested. Check Downloads.'}catch(e){$('reportDialogStatus').textContent='Excel export failed: '+e.message;ioMessage('Excel export failed: '+e.message)}};
+$('exportPdf').onclick=()=>{try{pdfReport()}catch(e){ioMessage('PDF export: '+e.message)}};
+$('reportPdfChoice').onclick=()=>{try{pdfReport();$('reportDialogStatus').textContent='PDF download requested. Check Downloads.'}catch(e){$('reportDialogStatus').textContent='PDF export failed: '+e.message;ioMessage('PDF export failed: '+e.message)}};
+// True chosen DPI metadata, with resolution proportional to the chart dimensions.
+function pngWithDpi(canvas,dpi){const raw=atob(canvas.toDataURL('image/png').split(',')[1]),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0)),ppm=Math.round(dpi/0.0254),data=new Uint8Array(9);data[0]=ppm>>>24;data[1]=ppm>>>16;data[2]=ppm>>>8;data[3]=ppm;data[4]=data[0];data[5]=data[1];data[6]=data[2];data[7]=data[3];data[8]=1;
+ function crc(buf){let x=0xffffffff;for(const c of buf){x^=c;for(let k=0;k<8;k++)x=(x>>>1)^((x&1)?0xedb88320:0)}return (x^0xffffffff)>>>0}const type=new TextEncoder().encode('pHYs'),chunk=new Uint8Array(21);new DataView(chunk.buffer).setUint32(0,9);chunk.set(type,4);chunk.set(data,8);const crcValue=crc(chunk.subarray(4,17));new DataView(chunk.buffer).setUint32(17,crcValue);return new Blob([bytes.subarray(0,33),chunk,bytes.subarray(33)],{type:'image/png'});
+}
+function jpegWithDpi(canvas,dpi){const raw=atob(canvas.toDataURL('image/jpeg',.95).split(',')[1]),bytes=Uint8Array.from(raw,c=>c.charCodeAt(0)); // JPEG JFIF APP0 already present: patch unit and resolution.
+ for(let j=2;j<Math.min(bytes.length,160);){if(bytes[j]!==0xff)break;const marker=bytes[j+1],len=(bytes[j+2]<<8)|bytes[j+3];if(marker===0xe0&&bytes[j+4]===0x4a&&bytes[j+5]===0x46&&bytes[j+6]===0x49&&bytes[j+7]===0x46){bytes[j+11]=1;bytes[j+12]=(dpi>>>8)&255;bytes[j+13]=dpi&255;bytes[j+14]=(dpi>>>8)&255;bytes[j+15]=dpi&255;break}j+=2+len;}return new Blob([bytes],{type:'image/jpeg'});
+}
+function exportMonitorImage(index,format,section){
+ try{
+ const dpi=Number(section.querySelector('.chart-dpi').value)||300;
+ // Redraw the actual numerical curves and labels at native resolution: 6 inches × selected dpi.
+ const width=Math.round(6*dpi),height=Math.round(width*275/850);
+ const out=document.createElement('canvas');out.width=width;out.height=height;
+ const c=out.getContext('2d');if(!c)throw Error('Browser cannot allocate a high-resolution drawing canvas. Try a smaller DPI.');
+ const bg='#ffffff';c.fillStyle=bg;c.fillRect(0,0,width,height);
+ drawCombinedMonitorCharts({index,canvas:out,scale:width/850});
+ downloadBlob(format==='png'?pngWithDpi(out,dpi):jpegWithDpi(out,dpi),exportModelFile('M'+(index+1)+'_'+dpi+'dpi',format==='png'?'png':'jpg'));
+ ioMessage('M'+(index+1)+' '+format.toUpperCase()+' image export requested: '+width+' × '+height+' pixels at '+dpi+' dpi.');
+ }catch(error){const message='Diagram export failed: '+(error?.message||error);ioMessage(message);alert(message)}
+}
+
+})();</script></body></html>
